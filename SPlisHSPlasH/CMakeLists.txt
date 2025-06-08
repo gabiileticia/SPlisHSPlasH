@@ -110,12 +110,14 @@ set(VORTICITY_HEADER_FILES
 	Vorticity/VorticityBase.h
 	Vorticity/MicropolarModel_Bender2017.h
 	Vorticity/VorticityConfinement.h
+	Vorticity/VorticityRefinement.h
 	)
 	
 set(VORTICITY_SOURCE_FILES
 	Vorticity/VorticityBase.cpp
 	Vorticity/MicropolarModel_Bender2017.cpp
 	Vorticity/VorticityConfinement.cpp
+	Vorticity/VorticityRefinement.cpp
 	)	
 
 set(DRAG_HEADER_FILES
