@@ -19,15 +19,16 @@ namespace SPH
         std::vector<Vector3r> m_vorticity_linear_field;
 		std::vector<Vector3r> m_vorticity_final;
 		std::vector<Vector3r> m_vorticity_derivative;
+		std::vector<Vector3r> m_vorticity_dissipation;
 		std::vector<Vector3r> m_stream;
-		std::vector<Vector3r> m_dissipation;
 		Real m_vorticityRefinementAlpha;
-		Real m_viscosityKinematic;
+		Real m_v_v;
 
 		virtual void initParameters();
 
 	public:
         static int IDEAL_VORTICITY_REFINEMENT_ALPHA;
+		static int VISCOSITY_VORT_REF;
 
 		VorticityRefinement(FluidModel *model);
 		virtual ~VorticityRefinement(void);

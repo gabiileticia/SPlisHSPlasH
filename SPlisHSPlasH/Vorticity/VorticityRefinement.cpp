@@ -7,55 +7,55 @@ using namespace SPH;
 using namespace GenParam;
 
 int VorticityRefinement::IDEAL_VORTICITY_REFINEMENT_ALPHA = -1;
+int VorticityRefinement::VISCOSITY_VORT_REF = -1;
 
 VorticityRefinement::VorticityRefinement(FluidModel *model) :
 	VorticityBase(model)
 {
-    //////////////////////////////////////////////////
-    // essa aqui eh um constructor
-    //////////////////////////////////////////////////
 	m_vorticity_linear_field.resize(model->numParticles(), Vector3r::Zero());
     m_vorticity_final.resize(model->numParticles(), Vector3r::Zero());
     m_vorticity_derivative.resize(model->numParticles(), Vector3r::Zero());
+    m_vorticity_dissipation.resize(model->numParticles(), Vector3r::Zero());
 	m_stream.resize(model->numParticles(), Vector3r::Zero());
-    m_dissipation.resize(model->numParticles(), Vector3r::Zero());
 	m_vorticityRefinementAlpha = static_cast<Real>(1.0);
-    m_viscosityKinematic = static_cast<Real>(0.05); // try to use the one from the simulation 
+    m_v_v = static_cast<Real>(0.05);
 
 	model->addField({ "vorticity_final", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_final[i][0]; }, true });
     model->addField({ "stream", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_stream[i][0]; }, true });
     model->addField({ "vorticity_linear_field", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_linear_field[i][0]; }, true });
     model->addField({ "vorticity_derivative", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_derivative[i][0]; }, true });
-    model->addField({ "dissipation", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_dissipation[i][0]; }, true });
+    model->addField({ "vorticity_dissipation", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_dissipation[i][0]; }, true });
 }
 
 VorticityRefinement::~VorticityRefinement(void)
 {
-    //////////////////////////////////////////////////
-    // essa aqui eh um destructor
-    //////////////////////////////////////////////////
-	m_model->removeFieldByName("vorticity");
+	m_model->removeFieldByName("vorticity_final");
     m_model->removeFieldByName("stream");
+    m_model->removeFieldByName("vorticity_linear_field");
+    m_model->removeFieldByName("vorticity_derivative");
+    m_model->removeFieldByName("vorticity_dissipation");
 
 	m_vorticity_linear_field.clear();
     m_vorticity_final.clear();
     m_vorticity_derivative.clear();
+    m_vorticity_dissipation.clear();
     m_stream.clear();
-    m_dissipation.clear();
 }
 
 void VorticityRefinement::initParameters()
 {
-    //////////////////////////////////////////////////
-    // essa aqui eh para setup de parametros inicias (acho q da interface)
-    //////////////////////////////////////////////////
 	VorticityBase::initParameters();
 
  	IDEAL_VORTICITY_REFINEMENT_ALPHA = createNumericParameter("vorticityRefinementAlpha", "Ideal Vorticity Refinement", &m_vorticityRefinementAlpha);
  	setGroup(IDEAL_VORTICITY_REFINEMENT_ALPHA, "Fluid Model|Vorticity");
  	setDescription(IDEAL_VORTICITY_REFINEMENT_ALPHA, "Ideal voricity refinment (alpha). Controls the amount of turbulence added to every simulation time step.");
  	RealParameter* rparam = static_cast<RealParameter*>(getParameter(IDEAL_VORTICITY_REFINEMENT_ALPHA));
- 	rparam->setMinValue(0.0); //they say alpha is in R
+
+    VISCOSITY_VORT_REF = createNumericParameter("v_v", "Viscosity", &m_v_v);
+ 	setGroup(VISCOSITY_VORT_REF, "Fluid Model|Vorticity");
+ 	setDescription(VISCOSITY_VORT_REF, "Viscosity (should came from vis model)");
+ 	rparam = static_cast<RealParameter*>(getParameter(VISCOSITY_VORT_REF));
+    rparam->setMinValue(0.0);
 }
 
 void VorticityRefinement::step()
@@ -69,7 +69,6 @@ void VorticityRefinement::step()
 	const unsigned int nFluids = sim->numberOfFluidModels();
 	const unsigned int nBoundaries = sim->numberOfBoundaryModels();
 	FluidModel *model = m_model;
-	const Real density0 = model->getDensity0();
 
 	const Real dt = TimeManager::getCurrent()->getTimeStepSize();
 
@@ -92,12 +91,13 @@ void VorticityRefinement::step()
 
             Vector3r &vorticity_linear_field = m_vorticity_linear_field[i];
 			vorticity_linear_field.setZero();
+            Vector3r &vorticity_dissipation = m_vorticity_dissipation[i];
+            vorticity_dissipation.setZero();
             
             Vector3r &vorticity_final = m_vorticity_final[i];
             Vector3r &vorticity_derivative = m_vorticity_derivative[i];
-
-            Vector3r &dissipation = m_dissipation[i];
-            Vector3r vorticity_ideal;
+            Vector3r vorticity_ideal; //compute vorticity equation
+            vorticity_ideal = vorticity_final + dt * vorticity_derivative;
 
             forall_fluid_neighbors_in_same_phase(
                 Vector3r &vj = m_model->getVelocity(neighborIndex);
@@ -109,10 +109,8 @@ void VorticityRefinement::step()
                 //vorticity through linear field
                 vorticity_linear_field += (mass_j /density_j) * (vi  - vj).cross(gradW);
 			);
-            vorticity_ideal = vorticity_final + dt * vorticity_derivative;
             // dissipation of vorticity - diff entre ideal e linear field
-            dissipation = vorticity_ideal - vorticity_linear_field;
-        
+            vorticity_dissipation = vorticity_ideal - vorticity_linear_field;
 		}
         
         #pragma omp for schedule(static)  
@@ -129,7 +127,7 @@ void VorticityRefinement::step()
                 const Vector3r xij = xi - xj;
                 const Real vol_j = m_model->getVolume(neighborIndex);
                 // compute stream function
-                stream += (1 / (4 * M_PI)) *  (m_dissipation[neighborIndex] * vol_j) / xij.norm();             
+                stream += (1 / (4 * M_PI)) *  (m_vorticity_dissipation[neighborIndex] * vol_j) / xij.norm();             
             ); 
         }    
 
@@ -187,9 +185,10 @@ void VorticityRefinement::step()
             //5 loop: compute final delta vorticity
 
             const Vector3r &xi = m_model->getPosition(i);
+            Vector3r &vi = m_model->getVelocity(i);
             Vector3r &vorticity_final = m_vorticity_final[i];
             Vector3r &vorticity_derivative = m_vorticity_derivative[i];
-            Vector3r &vi = m_model->getVelocity(i);
+            vorticity_derivative.setZero();
 
             Vector3r gradV_x;
             gradV_x.setZero();
@@ -199,6 +198,7 @@ void VorticityRefinement::step()
             gradV_z.setZero();
 
             Vector3r vortEquationGradient;
+            vortEquationGradient.setZero();
             Vector3r vortEquationLaplacian;
             vortEquationLaplacian.setZero();
 
@@ -218,7 +218,7 @@ void VorticityRefinement::step()
                 gradV_y += (mass_j / density_j) * (vj.y() - vi.y()) * (gradW);
                 gradV_z += (mass_j / density_j) * (vj.z() - vi.z()) * (gradW);
 
-                vortEquationLaplacian += 2 * (d + 2) * m_viscosityKinematic * (mass_j / density_j) * ((vort_ij.dot(xij)) / (xij.dot(xij) + 0.01 * h2)) * gradW;
+                vortEquationLaplacian += 2 * (d + 2) * m_v_v * (mass_j / density_j) * ((vort_ij.dot(xij)) / (xij.dot(xij) + 0.01 * h2)) * gradW;
             );
 
             vortEquationGradient.x() = vorticity_final.dot(gradV_x);
@@ -238,12 +238,7 @@ void VorticityRefinement::reset()
         m_vorticity_linear_field[i].setZero();
         m_vorticity_final[i].setZero();
         m_vorticity_derivative[i].setZero();
+        m_vorticity_dissipation[i].setZero();
         m_stream[i].setZero();
-        m_dissipation[i].setZero();
     }
 }
-
-
-// do i need to think of neighboorhod search
-
-
