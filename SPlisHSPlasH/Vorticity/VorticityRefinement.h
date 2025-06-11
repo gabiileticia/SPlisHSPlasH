@@ -21,6 +21,7 @@ namespace SPH
 		std::vector<Vector3r> m_vorticity_derivative;
 		std::vector<Vector3r> m_vorticity_dissipation;
 		std::vector<Vector3r> m_stream;
+		std::vector<Real> m_total_energy;
 		Real m_vorticityRefinementAlpha;
 		Real m_v_v;
 

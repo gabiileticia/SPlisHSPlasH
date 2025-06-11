@@ -17,6 +17,7 @@ VorticityRefinement::VorticityRefinement(FluidModel *model) :
     m_vorticity_derivative.resize(model->numParticles(), Vector3r::Zero());
     m_vorticity_dissipation.resize(model->numParticles(), Vector3r::Zero());
 	m_stream.resize(model->numParticles(), Vector3r::Zero());
+    m_total_energy.resize(model->numParticles(), 0.0);
 	m_vorticityRefinementAlpha = static_cast<Real>(1.0);
     m_v_v = static_cast<Real>(0.05);
 
@@ -25,6 +26,7 @@ VorticityRefinement::VorticityRefinement(FluidModel *model) :
     model->addField({ "vorticity_linear_field", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_linear_field[i][0]; }, true });
     model->addField({ "vorticity_derivative", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_derivative[i][0]; }, true });
     model->addField({ "vorticity_dissipation", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_dissipation[i][0]; }, true });
+    model->addField({ "total_energy", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_total_energy[i]; }, true });
 }
 
 VorticityRefinement::~VorticityRefinement(void)
@@ -34,12 +36,14 @@ VorticityRefinement::~VorticityRefinement(void)
     m_model->removeFieldByName("vorticity_linear_field");
     m_model->removeFieldByName("vorticity_derivative");
     m_model->removeFieldByName("vorticity_dissipation");
+    m_model->removeFieldByName("m_total_energy");
 
 	m_vorticity_linear_field.clear();
     m_vorticity_final.clear();
     m_vorticity_derivative.clear();
     m_vorticity_dissipation.clear();
     m_stream.clear();
+    m_total_energy.clear();
 }
 
 void VorticityRefinement::initParameters()
@@ -166,6 +170,11 @@ void VorticityRefinement::step()
             Vector3r &vorticity_final = m_vorticity_final[i];
             vorticity_final.setZero();
 
+            // compute energy with new v
+            Real mass_i = m_model->getMass(i);
+            m_total_energy[i] = mass_i * vi.dot(vi)/2;
+			m_total_energy[i] += mass_i * 9.81 * xi.y();
+
             // update do q eh last vorticity   
             forall_fluid_neighbors_in_same_phase(
                 Vector3r &vj = m_model->getVelocity(neighborIndex);
@@ -240,5 +249,6 @@ void VorticityRefinement::reset()
         m_vorticity_derivative[i].setZero();
         m_vorticity_dissipation[i].setZero();
         m_stream[i].setZero();
+        m_total_energy[i] = 0.0;
     }
 }
