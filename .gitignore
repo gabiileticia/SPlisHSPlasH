@@ -1,0 +1,5 @@
+build/
+.vs/
+bin/
+data/Scenes/Cache
+Utilities/Version.h
