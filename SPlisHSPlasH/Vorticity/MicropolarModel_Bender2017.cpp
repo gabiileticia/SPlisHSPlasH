@@ -19,26 +19,22 @@ MicropolarModel_Bender2017::MicropolarModel_Bender2017(FluidModel *model) :
 {
 	m_omega.resize(model->numParticles(), Vector3r::Zero());
 	m_angularAcceleration.resize(model->numParticles(), Vector3r::Zero());
-	m_vorticity_final_mp.resize(model->numParticles(), Vector3r::Zero());
-	m_total_energy_mp.resize(model->numParticles(), 0.0);
+	m_vorticity_current_mp.resize(model->numParticles(), Vector3r::Zero());
 	m_inertiaInverse = static_cast<Real>(0.5);
 	m_viscosityOmega = static_cast<Real>(0.1);
 
 	model->addField({ "angular velocity", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_omega[i][0]; }, true });
-	model->addField({ "vorticity_final", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_final_mp[i][0]; }, true });
-	model->addField({ "energy_total", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_total_energy_mp[i]; }, true });
+	model->addField({ "vorticity_current", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_current_mp[i][0]; }, true });
 }
 
 MicropolarModel_Bender2017::~MicropolarModel_Bender2017(void)
 {
-	m_model->removeFieldByName("angular velocity");
-	m_model->removeFieldByName("vorticity_final");
-	m_model->removeFieldByName("energy_total");
+	m_model->removeFieldByName("angular velocity");	
+	m_model->removeFieldByName("vorticity_current");
 
 	m_omega.clear();
 	m_angularAcceleration.clear();
-	m_vorticity_final_mp.clear();
-	m_total_energy_mp.clear();
+	m_vorticity_current_mp.clear();
 }
 
 void MicropolarModel_Bender2017::initParameters()
@@ -59,122 +55,120 @@ void MicropolarModel_Bender2017::initParameters()
 	rparam->setMinValue(0.0);
 }
 
-#ifdef USE_AVX
-
-void MicropolarModel_Bender2017::step()
-{
-	Simulation *sim = Simulation::getCurrent();
-	const unsigned int numParticles = m_model->numActiveParticles();
-	if (numParticles == 0)
-		return;
-
-	const unsigned int fluidModelIndex = m_model->getPointSetIndex();
-	const unsigned int nFluids = sim->numberOfFluidModels();
-	const unsigned int nBoundaries = sim->numberOfBoundaryModels();
-	FluidModel *model = m_model;
-	const Real density0 = model->getDensity0();
-
-	const Real dt = TimeManager::getCurrent()->getTimeStepSize();
-	const Real invDt = static_cast<Real>(1.0) / dt;
-
-	const Real nu_t = m_vorticityCoeff;
-	const Real zeta = m_viscosityOmega;
-
-	const Real h = sim->getSupportRadius();
-	const Real h2 = h*h;
-	const Scalarf8 density0_avx(density0);
-
-	const Scalarf8 factor_avx(invDt * m_inertiaInverse * zeta *density0);
-
-	//Real d = 10.0;
-	//if (sim->is2DSimulation())
-	//	d = 8.0;
-
-	#pragma omp parallel default(shared)
-	{
-		#pragma omp for schedule(static)  
-		for (int i = 0; i < (int)numParticles; i++)
-		{
-			const Vector3r &xi = m_model->getPosition(i);
-			const Vector3r &vi = m_model->getVelocity(i);
-			const Vector3r &omegai = m_omega[i];
-			Vector3r &ai = m_model->getAcceleration(i);
-			Vector3r &angAcceli = m_angularAcceleration[i];
-			angAcceli.setZero();
-			const Real density_i = m_model->getDensity(i);
-
-			const Vector3f8 xi_avx(xi);
-			const Vector3f8 vi_avx(vi);
-			const Scalarf8 mi_avx(m_model->getMass(i));
-			const Vector3f8 omegai_avx(omegai);
-			const Scalarf8 density_i_avx(density_i);
-			const Scalarf8 nut_density_i(nu_t / density_i);
-			const Scalarf8 nut_density_i_intertiaInverse(nu_t / density_i * m_inertiaInverse);	
-			
-						//4 loop: compute final vorticity
-            Vector3r &vorticity_final = m_vorticity_final_mp[i];
-            vorticity_final.setZero();
-			Vector3f8 vorticity_avx;
-			vorticity_avx.setZero();
-
-			Vector3f8 delta_ai_avx;
-			delta_ai_avx.setZero();
-			Vector3f8 delta_angAcceli_avx;
-			delta_angAcceli_avx.setZero();
-
-			Real mass_i = m_model->getMass(i);
-            m_total_energy_mp[i] = mass_i * vi.dot(vi)/2;
-			m_total_energy_mp[i] += mass_i * 9.81 * xi.y();
-
-			//////////////////////////////////////////////////////////////////////////
-			// Fluid
-			//////////////////////////////////////////////////////////////////////////
-			forall_fluid_neighbors_in_same_phase_avx(
-				const Scalarf8 Vj_avx = convert_zero(model->getVolume(0), count);
-				compute_Vj_gradW_samephase();
-
-				const Vector3f8 vj_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &model->getVelocity(0), count);
-				const Vector3f8 omegaj_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &m_omega[0], count);
-
-				// Viscosity
-				const Scalarf8 density_j_avx = convert_one(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &model->getDensity(0), count);
-				const Vector3f8 omegaij = omegai_avx - omegaj_avx;
-
-				// XSPH for angular velocity field
-				const Scalarf8 mj_avx = convert_zero(model->getMass(0), count);
-				delta_angAcceli_avx -= omegaij * factor_avx * (Vj_avx / density_j_avx) * CubicKernel_AVX::W(xi_avx - xj_avx);
-
-				// difference curl 
-				delta_ai_avx += (omegaij % V_gradW) * (nut_density_i * density0_avx);
-				delta_angAcceli_avx += ((vi_avx - vj_avx) % V_gradW) * (nut_density_i_intertiaInverse * density0_avx);
-				vorticity_avx += ((vi_avx - vj_avx) % V_gradW) * (mj_avx /density_j_avx);
-			);
-
-			ai[0] += delta_ai_avx.x().reduce();
-			ai[1] += delta_ai_avx.y().reduce();
-			ai[2] += delta_ai_avx.z().reduce();
-			angAcceli[0] += delta_angAcceli_avx.x().reduce();
-			angAcceli[1] += delta_angAcceli_avx.y().reduce();
-			angAcceli[2] += delta_angAcceli_avx.z().reduce();
-			vorticity_final[0] += vorticity_avx.x().reduce();
-			vorticity_final[1] += vorticity_avx.y().reduce();
-			vorticity_final[2] += vorticity_avx.z().reduce();
-
-			angAcceli -= 2.0 * m_inertiaInverse * nu_t * omegai;
-		}
-	}
-
-	#pragma omp parallel default(shared)
-	{
-		#pragma omp for schedule(static)  
-		for (int i = 0; i < (int)numParticles; i++)
-		{
-			m_omega[i] += dt*m_angularAcceleration[i];
-		}
-	}
-}
-
-#else
+//#ifdef USE_AVX
+//
+//void MicropolarModel_Bender2017::step()
+//{
+//	Simulation *sim = Simulation::getCurrent();
+//	const unsigned int numParticles = m_model->numActiveParticles();
+//	if (numParticles == 0)
+//		return;
+//
+//	const unsigned int fluidModelIndex = m_model->getPointSetIndex();
+//	const unsigned int nFluids = sim->numberOfFluidModels();
+//	const unsigned int nBoundaries = sim->numberOfBoundaryModels();
+//	FluidModel *model = m_model;
+//	const Real density0 = model->getDensity0();
+//
+//	const Real dt = TimeManager::getCurrent()->getTimeStepSize();
+//	const Real invDt = static_cast<Real>(1.0) / dt;
+//
+//	const Real nu_t = m_vorticityCoeff;
+//	const Real zeta = m_viscosityOmega;
+//
+//	const Real h = sim->getSupportRadius();
+//	const Real h2 = h*h;
+//	const Scalarf8 density0_avx(density0);
+//
+//	const Scalarf8 factor_avx(invDt * m_inertiaInverse * zeta *density0);
+//
+//	//Real d = 10.0;
+//	//if (sim->is2DSimulation())
+//	//	d = 8.0;
+//
+//	#pragma omp parallel default(shared)
+//	{
+//		#pragma omp for schedule(static)  
+//		for (int i = 0; i < (int)numParticles; i++)
+//		{
+//			const Vector3r &xi = m_model->getPosition(i);
+//			const Vector3r &vi = m_model->getVelocity(i);
+//			const Vector3r &omegai = m_omega[i];
+//			Vector3r &ai = m_model->getAcceleration(i);
+//			Vector3r &angAcceli = m_angularAcceleration[i];
+//			angAcceli.setZero();
+//			const Real density_i = m_model->getDensity(i);
+//
+//			const Vector3f8 xi_avx(xi);
+//			const Vector3f8 vi_avx(vi);
+//			const Scalarf8 mi_avx(m_model->getMass(i));
+//			const Vector3f8 omegai_avx(omegai);
+//			const Scalarf8 density_i_avx(density_i);
+//			const Scalarf8 nut_density_i(nu_t / density_i);
+//			const Scalarf8 nut_density_i_intertiaInverse(nu_t / density_i * m_inertiaInverse);	
+//			
+//			//4 loop: compute final vorticity
+//            Vector3r &vorticity_current = m_vorticity_current_mp[i];
+//            vorticity_current.setZero();
+//			Vector3f8 vorticity_avx;
+//			vorticity_avx.setZero();
+//
+//			Vector3f8 delta_ai_avx;
+//			delta_ai_avx.setZero();
+//			Vector3f8 delta_angAcceli_avx;
+//			delta_angAcceli_avx.setZero();
+//
+//			Real mass_i = m_model->getMass(i);
+//
+//			//////////////////////////////////////////////////////////////////////////
+//			// Fluid
+//			//////////////////////////////////////////////////////////////////////////
+//			forall_fluid_neighbors_in_same_phase_avx(
+//				const Scalarf8 Vj_avx = convert_zero(model->getVolume(0), count);
+//				compute_Vj_gradW_samephase();
+//
+//				const Vector3f8 vj_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &model->getVelocity(0), count);
+//				const Vector3f8 omegaj_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &m_omega[0], count);
+//
+//				// Viscosity
+//				const Scalarf8 density_j_avx = convert_one(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &model->getDensity(0), count);
+//				const Vector3f8 omegaij = omegai_avx - omegaj_avx;
+//
+//				// XSPH for angular velocity field
+//				const Scalarf8 mj_avx = convert_zero(model->getMass(0), count);
+//				delta_angAcceli_avx -= omegaij * factor_avx * (Vj_avx / density_j_avx) * CubicKernel_AVX::W(xi_avx - xj_avx);
+//
+//				// difference curl 
+//				delta_ai_avx += (omegaij % V_gradW) * (nut_density_i * density0_avx);
+//				delta_angAcceli_avx += ((vi_avx - vj_avx) % V_gradW) * (nut_density_i_intertiaInverse * density0_avx);
+//				vorticity_avx += ((vi_avx - vj_avx) % V_gradW) * (mj_avx /density_j_avx);
+//			);
+//
+//			ai[0] += delta_ai_avx.x().reduce();
+//			ai[1] += delta_ai_avx.y().reduce();
+//			ai[2] += delta_ai_avx.z().reduce();
+//			angAcceli[0] += delta_angAcceli_avx.x().reduce();
+//			angAcceli[1] += delta_angAcceli_avx.y().reduce();
+//			angAcceli[2] += delta_angAcceli_avx.z().reduce();
+//			vorticity_current[0] += vorticity_avx.x().reduce();
+//			vorticity_current[1] += vorticity_avx.y().reduce();
+//			vorticity_current[2] += vorticity_avx.z().reduce();
+//
+//			angAcceli -= 2.0 * m_inertiaInverse * nu_t * omegai;
+//		}
+//	}
+//
+//	#pragma omp parallel default(shared)
+//	{
+//		#pragma omp for schedule(static)  
+//		for (int i = 0; i < (int)numParticles; i++)
+//		{
+//			m_omega[i] += dt*m_angularAcceleration[i];
+//		}
+//	}
+//}
+//
+//#else
 
 void MicropolarModel_Bender2017::step()
 {
@@ -216,12 +210,10 @@ void MicropolarModel_Bender2017::step()
 			const Real density_i = m_model->getDensity(i);
 
 			//4 loop: compute final vorticity
-            Vector3r &vorticity_final = m_vorticity_final_mp[i];
-            vorticity_final.setZero();
+            Vector3r &vorticity_current = m_vorticity_current_mp[i];
+            vorticity_current.setZero();
 
 			Real mass_i = m_model->getMass(i);
-            m_total_energy_mp[i] = mass_i * vi.dot(vi)/2;
-			m_total_energy_mp[i] += mass_i * 9.81 * xi.y();
 
 			//////////////////////////////////////////////////////////////////////////
 			// Fluid
@@ -246,7 +238,7 @@ void MicropolarModel_Bender2017::step()
  				// difference curl 
  				ai += nu_t * 1.0/density_i * m_model->getMass(neighborIndex) * (omegaij.cross(gradW));
  				angAcceli += nu_t * 1.0/density_i * m_inertiaInverse * (m_model->getMass(neighborIndex) * (vi  - vj).cross(gradW));
-				vorticity_final += (mass_j /density_j) * (vi  - vj).cross(gradW);
+				vorticity_current += (mass_j /density_j) * (vi  - vj).cross(gradW);
 			);
 
 			angAcceli -= 2.0 * m_inertiaInverse * nu_t * omegai;
@@ -263,15 +255,14 @@ void MicropolarModel_Bender2017::step()
 	}
 }
 
-#endif
+//#endif
 
 void MicropolarModel_Bender2017::reset()
 {
 	for (unsigned int i = 0; i < m_model->numParticles(); i++)
 	{
 		m_omega[i].setZero();
-		m_vorticity_final_mp[i].setZero();
-		m_total_energy_mp[i] = 0.0;
+		m_vorticity_current_mp[i].setZero();
 	}
 }
 
