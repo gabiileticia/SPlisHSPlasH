@@ -209,7 +209,6 @@ void MicropolarModel_Bender2017::step()
 			angAcceli.setZero();
 			const Real density_i = m_model->getDensity(i);
 
-			//4 loop: compute final vorticity
             Vector3r &vorticity_current = m_vorticity_current_mp[i];
             vorticity_current.setZero();
 

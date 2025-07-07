@@ -496,9 +496,9 @@ void Simulation::computeNonPressureForces()
 	for (unsigned int i = 0; i < numberOfFluidModels(); i++)
 	{
 		FluidModel *fm = getFluidModel(i);
+		fm->computeVorticity();
 		fm->computeSurfaceTension();
 		fm->computeViscosity();
-		fm->computeVorticity();
 		fm->computeDragForce();
 		fm->computeElasticity();
 		fm->computeXSPH();

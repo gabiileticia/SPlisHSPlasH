@@ -21,6 +21,7 @@ namespace SPH
 		std::vector<Vector3r> m_vorticity_derivative;
 		std::vector<Vector3r> m_vorticity_dissipation;
 		std::vector<Vector3r> m_stream;
+		std::vector<Vector3r> m_delta_velocity;
 		Real m_vorticity_refinement_alpha;
 
 		virtual void initParameters();
