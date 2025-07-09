@@ -47,26 +47,25 @@ VorticityRefinement::~VorticityRefinement(void)
 
 void VorticityRefinement::initParameters()
 {
-	VorticityBase::initParameters();
-
- 	IDEAL_VORTICITY_REFINEMENT_ALPHA = createNumericParameter("vorticityRefinementAlpha", "Ideal Vorticity Refinement", &m_vorticity_refinement_alpha);
- 	setGroup(IDEAL_VORTICITY_REFINEMENT_ALPHA, "Fluid Model|Vorticity");
- 	setDescription(IDEAL_VORTICITY_REFINEMENT_ALPHA, "Ideal voricity refinment (alpha). Controls the amount of turbulence added to every simulation time step.");
- 	RealParameter* rparam = static_cast<RealParameter*>(getParameter(IDEAL_VORTICITY_REFINEMENT_ALPHA));
+    VorticityBase::initParameters();
+    IDEAL_VORTICITY_REFINEMENT_ALPHA = createNumericParameter("vorticityRefinementAlpha", "Ideal Vorticity Refinement", &m_vorticity_refinement_alpha);
+    setGroup(IDEAL_VORTICITY_REFINEMENT_ALPHA, "Fluid Model|Vorticity");
+    setDescription(IDEAL_VORTICITY_REFINEMENT_ALPHA, "Ideal voricity refinment (alpha). Controls the amount of turbulence added to every simulation time step.");
+    RealParameter* rparam = static_cast<RealParameter*>(getParameter(IDEAL_VORTICITY_REFINEMENT_ALPHA));
 
 }
 
 void VorticityRefinement::step()
 {
-	Simulation *sim = Simulation::getCurrent();
-	const unsigned int numParticles = m_model->numActiveParticles();
-	if (numParticles == 0)
-		return;
-
-	const unsigned int fluidModelIndex = m_model->getPointSetIndex();
-	const unsigned int nFluids = sim->numberOfFluidModels();
-	const unsigned int nBoundaries = sim->numberOfBoundaryModels();
-	FluidModel *model = m_model;
+    Simulation *sim = Simulation::getCurrent();
+    const unsigned int numParticles = m_model->numActiveParticles();
+    if (numParticles == 0)
+        return;
+    
+    const unsigned int fluidModelIndex = m_model->getPointSetIndex();
+    const unsigned int nFluids = sim->numberOfFluidModels();
+    const unsigned int nBoundaries = sim->numberOfBoundaryModels();
+    FluidModel *model = m_model;
 
     Real m_v_v;
     ViscosityBase *m_visc = m_model->getViscosityBase();
@@ -75,10 +74,9 @@ void VorticityRefinement::step()
     else
         m_v_v = m_visc->model_viscosity();
 
-	const Real dt = TimeManager::getCurrent()->getTimeStepSize();
-
-	const Real h = sim->getSupportRadius();
-	const Real h2 = h*h;
+    const Real dt = TimeManager::getCurrent()->getTimeStepSize();
+    const Real h = sim->getSupportRadius();
+    const Real h2 = h*h;
     Real vorticity_refinement_alpha = m_vorticity_refinement_alpha;
 
 
@@ -86,9 +84,9 @@ void VorticityRefinement::step()
     if (sim->is2DSimulation()) {
 		d = 2.0;
     }
-    
-	#pragma omp parallel default(shared)
-	{
+
+    #pragma omp parallel default(shared)
+    {
         #pragma omp for schedule(static)  
         for (int i = 0; i < (int)numParticles; i++)
         {
