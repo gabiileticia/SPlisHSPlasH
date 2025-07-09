@@ -82,7 +82,7 @@ void VorticityRefinement::step()
 
     Real d = 3.0;
     if (sim->is2DSimulation()) {
-		d = 2.0;
+        d = 2.0;
     }
 
     #pragma omp parallel default(shared)
