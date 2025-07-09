@@ -178,7 +178,7 @@ void VorticityRefinement::step()
             // computing vorticity based on new velocity (first line of algorithm)  
             forall_fluid_neighbors_in_same_phase(
                 Vector3r &vj = m_model->getVelocity(neighborIndex);
-	            Real density_j = m_model->getDensity(neighborIndex);
+                Real density_j = m_model->getDensity(neighborIndex);
                 Real mass_j = m_model->getMass(neighborIndex);
 
                 Vector3r xij = xi - xj;
