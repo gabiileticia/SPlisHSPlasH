@@ -12,15 +12,15 @@ int VorticityRefinement::IDEAL_VORTICITY_REFINEMENT_ALPHA = -1;
 VorticityRefinement::VorticityRefinement(FluidModel *model) :
 	VorticityBase(model)
 {
-	m_vorticity_linear_field.resize(model->numParticles(), Vector3r::Zero());
+    m_vorticity_linear_field.resize(model->numParticles(), Vector3r::Zero());
     m_vorticity_current.resize(model->numParticles(), Vector3r::Zero());
     m_vorticity_derivative.resize(model->numParticles(), Vector3r::Zero());
     m_vorticity_dissipation.resize(model->numParticles(), Vector3r::Zero());
-	m_stream.resize(model->numParticles(), Vector3r::Zero());
+    m_stream.resize(model->numParticles(), Vector3r::Zero());
     m_delta_velocity.resize(model->numParticles(), Vector3r::Zero());
-	m_vorticity_refinement_alpha = static_cast<Real>(1.0);
-
-	model->addField({ "vorticity_current", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_current[i][0]; }, true });
+    m_vorticity_refinement_alpha = static_cast<Real>(1.0);
+    
+    model->addField({ "vorticity_current", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_current[i][0]; }, true });
     model->addField({ "stream", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_stream[i][0]; }, true });
     model->addField({ "vorticity_linear_field", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_linear_field[i][0]; }, true });
     model->addField({ "vorticity_derivative", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_derivative[i][0]; }, true });
@@ -30,14 +30,14 @@ VorticityRefinement::VorticityRefinement(FluidModel *model) :
 
 VorticityRefinement::~VorticityRefinement(void)
 {
-	m_model->removeFieldByName("vorticity_current");
+    m_model->removeFieldByName("vorticity_current");
     m_model->removeFieldByName("stream");
     m_model->removeFieldByName("vorticity_linear_field");
     m_model->removeFieldByName("vorticity_derivative");
     m_model->removeFieldByName("vorticity_dissipation");
     m_model->removeFieldByName("delta_velocity");
 
-	m_vorticity_linear_field.clear();
+    m_vorticity_linear_field.clear();
     m_vorticity_current.clear();
     m_vorticity_derivative.clear();
     m_vorticity_dissipation.clear();
@@ -89,9 +89,9 @@ void VorticityRefinement::step()
     
 	#pragma omp parallel default(shared)
 	{
-		#pragma omp for schedule(static)  
-		for (int i = 0; i < (int)numParticles; i++)
-		{
+        #pragma omp for schedule(static)  
+        for (int i = 0; i < (int)numParticles; i++)
+        {
             // 1st loop: compute vorticity though linear field and compute dissipation
 			const Vector3r &xi = m_model->getPosition(i);
 			const Vector3r &vi = m_model->getVelocity(i);
