@@ -16,7 +16,7 @@ namespace SPH
 	class VorticityRefinement : public VorticityBase
 	{    
 	protected:
-        std::vector<Vector3r> m_vorticity_linear_field;
+		std::vector<Vector3r> m_vorticity_linear_field;
 		std::vector<Vector3r> m_vorticity_current;
 		std::vector<Vector3r> m_vorticity_derivative;
 		std::vector<Vector3r> m_vorticity_dissipation;
@@ -27,7 +27,7 @@ namespace SPH
 		virtual void initParameters();
 
 	public:
-        static int IDEAL_VORTICITY_REFINEMENT_ALPHA;
+		static int IDEAL_VORTICITY_REFINEMENT_ALPHA;
 		static int VISCOSITY_VORT_REF;
 
 		VorticityRefinement(FluidModel *model);

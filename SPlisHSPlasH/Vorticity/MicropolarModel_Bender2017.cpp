@@ -108,8 +108,8 @@ void MicropolarModel_Bender2017::step()
 			const Scalarf8 nut_density_i_intertiaInverse(nu_t / density_i * m_inertiaInverse);	
 			
 			//4 loop: compute final vorticity
-            Vector3r &vorticity_current = m_vorticity_current_mp[i];
-            vorticity_current.setZero();
+			Vector3r &vorticity_current = m_vorticity_current_mp[i];
+			vorticity_current.setZero();
 			Vector3f8 vorticity_avx;
 			vorticity_avx.setZero();
 
@@ -209,8 +209,8 @@ void MicropolarModel_Bender2017::step()
 			angAcceli.setZero();
 			const Real density_i = m_model->getDensity(i);
 
-            Vector3r &vorticity_current = m_vorticity_current_mp[i];
-            vorticity_current.setZero();
+			Vector3r &vorticity_current = m_vorticity_current_mp[i];
+			vorticity_current.setZero();
 
 			Real mass_i = m_model->getMass(i);
 
@@ -220,7 +220,7 @@ void MicropolarModel_Bender2017::step()
 			forall_fluid_neighbors_in_same_phase(
 				const Vector3r &vj = m_model->getVelocity(neighborIndex);
 				const Vector3r &omegaj = m_omega[neighborIndex];
-                Real mass_j = m_model->getMass(neighborIndex);
+				Real mass_j = m_model->getMass(neighborIndex);
 
 				// Viscosity
 				const Real density_j = m_model->getDensity(neighborIndex);
