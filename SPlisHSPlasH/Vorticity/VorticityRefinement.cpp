@@ -85,7 +85,6 @@ void VorticityRefinement::step()
     Real d = 3.0;
     if (sim->is2DSimulation()) {
 		d = 2.0;
-        vorticity_refinement_alpha = vorticity_refinement_alpha * h;
     }
     
 	#pragma omp parallel default(shared)
@@ -93,8 +92,7 @@ void VorticityRefinement::step()
 		#pragma omp for schedule(static)  
 		for (int i = 0; i < (int)numParticles; i++)
 		{
-            // first loop: compute vorticity though linear field and compute dissipation
-            
+            // 1st loop: compute vorticity though linear field and compute dissipation
 			const Vector3r &xi = m_model->getPosition(i);
 			const Vector3r &vi = m_model->getVelocity(i);
 
@@ -118,16 +116,15 @@ void VorticityRefinement::step()
 
                 //vorticity through linear field
                 vorticity_linear_field += (mass_j /density_j) * (vi  - vj).cross(gradW);
-                //vorticity_linear_field += (mass_j /density_j) * (vj - vi).cross(gradW);
 			);
-            // dissipation of vorticity - diff entre ideal e linear field
+            // dissipation of vorticity - diff between ideal and linear field
             vorticity_dissipation = vorticity_equation - vorticity_linear_field;
 		}
         
         #pragma omp for schedule(static)  
 		for (int i = 0; i < (int)numParticles; i++)
 		{
-            // 2 loop: compute stream
+            // 2nd loop: compute stream
             const Vector3r &xi = m_model->getPosition(i);
 
             Vector3r &stream = m_stream[i];
@@ -136,7 +133,6 @@ void VorticityRefinement::step()
             forall_fluid_neighbors_in_same_phase(
 
                 const Vector3r xij = xi - xj;
-                //const Real vol_j = m_model->getVolume(neighborIndex);
                 Real density_j = m_model->getDensity(neighborIndex);
                 Real mass_j = m_model->getMass(neighborIndex);
 
@@ -148,7 +144,7 @@ void VorticityRefinement::step()
         #pragma omp for schedule(static)  
 		for (int i = 0; i < (int)numParticles; i++)
 		{
-            // 3 loop: delta v u update v
+            // 3rd loop: compute delta v and update v
             Vector3r &vi = m_model->getVelocity(i);
             const Vector3r &xi = m_model->getPosition(i);
             Vector3r &stream_i = m_stream[i];
@@ -163,26 +159,25 @@ void VorticityRefinement::step()
                 const Vector3r xij = xi - xj;
                 const Vector3r gradW = sim->gradW(xij);
 
-                // refinement of linear velocity - delta v
-                //delta_velocity += (mass_j / density_j) * (m_stream[neighborIndex] - stream_i).cross(gradW);
+                // compute delta velocity
                 delta_velocity += (mass_j/ density_j) * (stream_i - m_stream[neighborIndex]).cross(gradW);
             );
 
-            // refine linear velocity - nova velocidade
+            // refine linear velocity
             vi += vorticity_refinement_alpha * delta_velocity;
         }
 
         #pragma omp for schedule(static)  
 		for (int i = 0; i < (int)numParticles; i++)
 		{
-            //4 loop: compute final vorticity
+            //4th loop: compute final vorticity
             const Vector3r &xi = m_model->getPosition(i);
             Vector3r &vi = m_model->getVelocity(i);
-            Vector3r &vorticity_current = m_vorticity_current[i];
+
+            Vector3r& vorticity_current = m_vorticity_current[i];            
             vorticity_current.setZero();
 
-
-            // update do q eh last vorticity   
+            // computing vorticity based on new velocity (first line of algorithm)  
             forall_fluid_neighbors_in_same_phase(
                 Vector3r &vj = m_model->getVelocity(neighborIndex);
 				Real density_j = m_model->getDensity(neighborIndex);
@@ -191,7 +186,6 @@ void VorticityRefinement::step()
                 Vector3r xij = xi - xj;
                 Vector3r gradW = sim->gradW(xij);
                 //vorticity through linear field
-                //vorticity_current += (mass_j /density_j) * (vj  - vi).cross(gradW);
                 vorticity_current += (mass_j / density_j) * (vi - vj).cross(gradW);
             );
         }
@@ -199,7 +193,7 @@ void VorticityRefinement::step()
         #pragma omp for schedule(static)  
 		for (int i = 0; i < (int)numParticles; i++)
 		{
-            //5 loop: compute final delta vorticity
+            //5th loop: compute vorticity derivative based on new vorticity
 
             const Vector3r &xi = m_model->getPosition(i);
             Vector3r &vi = m_model->getVelocity(i);
@@ -219,7 +213,6 @@ void VorticityRefinement::step()
             Vector3r vorticity_rate_laplacian;
             vorticity_rate_laplacian.setZero();
 
-            // update do q eh last vorticity   
             forall_fluid_neighbors_in_same_phase(
                 Vector3r &vj = m_model->getVelocity(neighborIndex);
                 Real density_j = m_model->getDensity(neighborIndex);
@@ -229,7 +222,6 @@ void VorticityRefinement::step()
                 Vector3r gradW = sim->gradW(xij);
                 const Vector3r vort_ij = vorticity_current - m_vorticity_current[neighborIndex];
                 
-                // compute vorticity equation - computar vorticity ideal
                 //  vorticity * gradV + v_v * laplacian(vorticity)
                 gradV_x += (mass_j / density_j) * (vj.x() - vi.x()) * (gradW);
                 gradV_y += (mass_j / density_j) * (vj.y() - vi.y()) * (gradW);
@@ -257,5 +249,6 @@ void VorticityRefinement::reset()
         m_vorticity_derivative[i].setZero();
         m_vorticity_dissipation[i].setZero();
         m_stream[i].setZero();
+        m_delta_velocity[i].setZero();
     }
 }
