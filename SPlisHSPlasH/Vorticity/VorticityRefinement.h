@@ -22,6 +22,16 @@ namespace SPH
 		std::vector<Vector3r> m_vorticity_dissipation;
 		std::vector<Vector3r> m_stream;
 		std::vector<Vector3r> m_delta_velocity;
+		std::vector<Vector3r> m_vorticity_equation;
+		std::vector<Vector3r> m_v_pre;
+		std::vector<Vector3r> m_v_post;
+		std::vector<Vector3r> m_x_pre;
+		std::vector<Vector3r> m_vorticity_rate_laplacian;
+		std::vector<Vector3r> m_vorticity_rate_gradient;
+		std::vector<Vector3r> m_gradV_x;
+		std::vector<Vector3r> m_gradV_y;
+		std::vector<Vector3r> m_gradV_z;
+
 		Real m_vorticity_refinement_alpha;
 
 		virtual void initParameters();
@@ -37,6 +47,8 @@ namespace SPH
 
 		virtual void step();
 		virtual void reset();
+
+		virtual void performNeighborhoodSearchSort();
 	};
 }
 

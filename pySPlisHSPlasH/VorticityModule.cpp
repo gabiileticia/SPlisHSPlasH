@@ -45,4 +45,11 @@ void VorticityModule(py::module m_sub) {
             .def("getAngularVelocity", (const Vector3r& (SPH::VorticityConfinement::*)(const unsigned int)const)&SPH::VorticityConfinement::getAngularVelocity)
             // .def("getAngularVelocity", (Vector3r& (SPH::VorticityConfinement::*)(const unsigned int))&SPH::VorticityConfinement::getAngularVelocity) // TODO: wont work by reference
             .def("setAngularVelocity", &SPH::VorticityConfinement::setAngularVelocity);
+
+
+    // ---------------------------------------
+    // Vorticity Refinement
+    // ---------------------------------------
+    py::class_<SPH::VorticityRefinement, SPH::VorticityBase>(m_sub, "VorticityRefinement")
+            .def(py::init<SPH::FluidModel*>())
 }

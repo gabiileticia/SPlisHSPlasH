@@ -141,7 +141,7 @@ void MicropolarModel_Bender2017::step()
 				// difference curl 
 				delta_ai_avx += (omegaij % V_gradW) * (nut_density_i * density0_avx);
 				delta_angAcceli_avx += ((vi_avx - vj_avx) % V_gradW) * (nut_density_i_intertiaInverse * density0_avx);
-				vorticity_avx += ((vi_avx - vj_avx) % V_gradW) * (mj_avx /density_j_avx);
+				vorticity_avx += ((vi_avx - vj_avx) % V_gradW);
 			);
 
 			ai[0] += delta_ai_avx.x().reduce();
