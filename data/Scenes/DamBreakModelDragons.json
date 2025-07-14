@@ -18,7 +18,7 @@
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
 		"enableVTKExport": true,
-		"particleAttributes": "density;velocity;vorticity_current;mass;vorticity_dissipation;vorticity_linear_field;stream;delta_velocity",
+		"particleAttributes": "density;velocity;vorticity_current;mass;vorticity_dissipation;vorticity_linear_field;stream;delta_velocity;m_v_post;m_v_pre;m_vorticity_rate_laplacian;m_vorticity_rate_gradient",
 		"boundaryHandlingMethod": 2
 	},
 	"Materials": [

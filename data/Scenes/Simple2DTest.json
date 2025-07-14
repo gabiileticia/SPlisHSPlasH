@@ -8,7 +8,7 @@
 		"numberOfStepsPerRenderUpdate": 4,
 		"density0": 1000, 
 		"simulationMethod": 4,
-		"gravitation": [0,-9.81,0], 
+		"gravitation": [0,0,0], 
 		"cflMethod": 1, 
 		"cflFactor": 1,
 		"cflMaxTimeStepSize": 0.005,
@@ -25,15 +25,8 @@
 	"Materials": [
 		{
 			"id": "Fluid",
-			"surfaceTension": 0.2,
-			"surfaceTensionMethod": 0,		
 			"viscosity": 0.01,
-			"viscosityMethod": 1, 
-			"vorticityMethod": 1, 
-			"vorticity": 0.1, 
-			"viscosityOmega": 0.05,
-			"inertiaInverse": 0.5,
-			"colorMapType": 1
+			"viscosityMethod": 1
 		}
 	],
 	"RigidBodies": [
@@ -54,13 +47,11 @@
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-2.0, 0.0, -1],
-			"end": [-0.5, 1.5, 1],
-			"translation": [0.05, 0.05, 0.0],
+			"start": [0.1, 0.1, -0.1],
+			"end": [0.3, 0.3, 0.1],
+			"translation": [0.0, 0.0, 0.0],
 			"scale": [1, 1, 1]
 		}
 	]	
 }
-
-
 

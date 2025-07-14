@@ -57,14 +57,12 @@
 	"AnimationFields": [
 		{
 			"particleField": "velocity",
-			"translation": [-3.0, -0.2, 0],
-			"rotationAxis": [0, 1, 0],
-			"rotationAngle": 1.57,
-			"scale": [1, 3, 3],
-			"shapeType": 1,
+			"translation": [-2.5, -1, 0],
+			"scale": [2, 5, 3],
+			"shapeType": 0,
 			"expression_x": "sin(2*t)*2",
 			"expression_y": "",
-			"expression_z": "cos(2*t)*2"
+			"expression_z": ""
 		}
 	]	
 }

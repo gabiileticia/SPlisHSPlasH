@@ -12,6 +12,7 @@
 #include <SPlisHSPlasH/Viscosity/Viscosity_Bender2017.h>
 #include <SPlisHSPlasH/Vorticity/MicropolarModel_Bender2017.h>
 #include <SPlisHSPlasH/Vorticity/VorticityConfinement.h>
+#include <SPlisHSPlasH/Vorticity/VorticityRefinement.h>
 
 namespace py = pybind11;
 
@@ -51,5 +52,5 @@ void VorticityModule(py::module m_sub) {
     // Vorticity Refinement
     // ---------------------------------------
     py::class_<SPH::VorticityRefinement, SPH::VorticityBase>(m_sub, "VorticityRefinement")
-            .def(py::init<SPH::FluidModel*>())
+            .def(py::init<SPH::FluidModel*>());
 }
