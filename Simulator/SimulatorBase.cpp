@@ -1339,9 +1339,9 @@ void SimulatorBase::createEmitters()
 				emitterBoundary->scale[2] = 2 * supportRadius;
 
 			if (ed->type == 0)
-				emitterBoundary->meshFile = FileSystem::normalizePath(getExePath() + "/resources/emitter_boundary/EmitterBox.obj");
+				emitterBoundary->meshFile = FileSystem::normalizePath(getExePath() + "/data/emitter_boundary/EmitterBox.obj");
 			else if (ed->type == 1)
-				emitterBoundary->meshFile = FileSystem::normalizePath(getExePath() + "/resources/emitter_boundary/EmitterCylinder.obj");
+				emitterBoundary->meshFile = FileSystem::normalizePath(getExePath() + "/data/emitter_boundary/EmitterCylinder.obj");
 			scene.boundaryModels.push_back(emitterBoundary);
 			
 			// reuse particles if they are outside of a bounding box

@@ -81,7 +81,7 @@ void Simulator_GUI_imgui::init(const char *name)
 	MiniGL::addKeyFunc(GLFW_KEY_KP_ADD, 0, std::bind(&SimulatorBase::singleTimeStep, m_simulatorBase));
 
 	if (MiniGL::checkOpenGLVersion(3, 3))
-		Simulator_OpenGL::initShaders(m_simulatorBase->getExePath() + "/resources/shaders");
+		Simulator_OpenGL::initShaders(m_simulatorBase->getExePath() + "/data/shaders");
 
 	const int width = MiniGL::getWidth();
 	const int height = MiniGL::getHeight();
@@ -185,8 +185,8 @@ void Simulator_GUI_imgui::initImgui()
 {
 	ImGuiIO& io = ImGui::GetIO(); (void)io;
 	
-	std::string font = Utilities::FileSystem::normalizePath(m_simulatorBase->getExePath() + "/resources/fonts/Roboto-Medium.ttf");
-	std::string font2 = Utilities::FileSystem::normalizePath(m_simulatorBase->getExePath() + "/resources/fonts/Cousine-Regular.ttf");
+	std::string font = Utilities::FileSystem::normalizePath(m_simulatorBase->getExePath() + "/data/fonts/Roboto-Medium.ttf");
+	std::string font2 = Utilities::FileSystem::normalizePath(m_simulatorBase->getExePath() + "/data/fonts/Cousine-Regular.ttf");
 
 	m_scales.push_back(1.0f);
 	m_scales.push_back(1.25f);

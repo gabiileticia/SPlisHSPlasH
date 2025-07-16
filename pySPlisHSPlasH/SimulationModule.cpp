@@ -337,7 +337,7 @@ void SimulationModule(py::module m_sub){
 
             .def("activateExporter", &SPH::SimulatorBase::activateExporter)
 
-			.def("setTimeStepCB", &SPH::SimulatorBase::setTimeStepCB)
+	    .def("setTimeStepCB", &SPH::SimulatorBase::setTimeStepCB)
             .def("setResetCB", &SPH::SimulatorBase::setResetCB);
 
      // ---------------------------------------

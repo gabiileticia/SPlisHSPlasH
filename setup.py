@@ -52,7 +52,7 @@ class CMakeBuild(build_ext):
         cmake_args = ['-DCMAKE_LIBRARY_OUTPUT_DIRECTORY=' + extdir,
                       '-DPYTHON_EXECUTABLE=' + sys.executable]
 
-        cfg = 'Debug' if self.debug else 'Release'
+        cfg = 'Release'
         build_args = ['--config', cfg]
 
         # Add cmake command line arguments
@@ -106,9 +106,9 @@ fonts = ['extern/imgui/misc/fonts/Roboto-Medium.ttf']
 # Install paths depending on system
 models_dest = 'data/models' if platform.system() == "Windows" else "bin/data/models"
 scenes_dest = 'data/Scenes' if platform.system() == "Windows" else "bin/data/Scenes"
-shaders_dest = 'resources/shaders' if platform.system() == "Windows" else 'bin/resources/shaders'
-emitter_boundary_dest = 'resources/emitter_boundary' if platform.system() == "Windows" else 'bin/resources/emitter_boundary'
-fonts_dest = 'resources/fonts' if platform.system() == "Windows" else 'bin/resources/fonts'
+shaders_dest = 'data/shaders' if platform.system() == "Windows" else 'bin/data/shaders'
+emitter_boundary_dest = 'data/emitter_boundary' if platform.system() == "Windows" else 'bin/data/emitter_boundary'
+fonts_dest = 'data/fonts' if platform.system() == "Windows" else 'bin/data/fonts'
 
 # Get Readme text for long description
 cur_dir = os.path.abspath(os.path.dirname(__file__))
@@ -132,7 +132,7 @@ setup(
     description='SPlisHSPlasH Project Python Bindings',
     long_description=long_description,
     long_description_content_type='text/markdown',
-    url='https://github.com/InteractiveComputerGraphics/SPlisHSPlasH',
+    url='https://github.com/gabiileticia/SPlisHSPlasH',
     license="MIT",
     keywords="sph fluids sph-fluids smoothed-particle-hydrodynamics fluid-simulation fluid-dynamics multiphase-flow viscous-fluids deformable-solids simulation",
     ext_modules=[CMakeExtension(name)],
