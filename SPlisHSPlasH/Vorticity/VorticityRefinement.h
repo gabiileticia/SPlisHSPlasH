@@ -24,7 +24,9 @@ namespace SPH
 		std::vector<Vector3r> m_stream;
 		std::vector<Vector3r> m_delta_velocity;
 		std::vector<Vector3r> m_vorticity_equation;
+		std::vector<Vector3r> m_a_adv;
 		std::vector<Vector3r> m_v_adv;
+		std::vector<Vector3r> m_v_pre;
 		std::vector<Vector3r> m_v_post;
 		std::vector<Vector3r> m_x_pre;
 		std::vector<Vector3r> m_vorticity_rate_laplacian;
