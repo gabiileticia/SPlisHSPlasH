@@ -146,7 +146,7 @@ void VorticityRefinement::step()
             m_v_pre[i] = m_model->getVelocity(i);
             //advected velocity
             m_v_adv[i] = m_v_post[i] + dt*m_a_adv[i];
-            m_vorticity_current[i] = m_vorticity_next[i];
+            // m_vorticity_current[i] = m_vorticity_next[i];
         }
 
         #pragma omp for schedule(static)  
@@ -161,6 +161,9 @@ void VorticityRefinement::step()
             
             Vector3r& vorticity_linear_field = m_vorticity_linear_field[i];
             vorticity_linear_field.setZero();
+
+            Vector3r& vorticity_current = m_vorticity_current[i];
+            vorticity_current.setZero();
             
             forall_fluid_neighbors_in_same_phase(
                 Vector3r &vj = m_model->getVelocity(neighborIndex);
@@ -174,7 +177,7 @@ void VorticityRefinement::step()
 
                 Vector3r xij_pre = xi_pre - m_x_pre[neighborIndex];
                 Vector3r gradW_pre = sim->gradW(xij_pre);
-                m_vorticity_current[i] += (mass_j / density_j) * (m_v_adv[i] - m_v_adv[j]).cross(gradW_pre);
+                vorticity_current += (mass_j / density_j) * (m_v_adv[i] - m_v_adv[j]).cross(gradW_pre);
             );
         }
 
