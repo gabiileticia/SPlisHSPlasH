@@ -17,8 +17,8 @@ namespace SPH
 	{    
 	protected:
 		std::vector<Vector3r> m_vorticity_linear_field;
-		std::vector<Vector3r> m_vorticity_current;
-		std::vector<Vector3r> m_vorticity_next;
+		std::vector<Vector3r> m_vorticity_advected;
+		std::vector<Vector3r> m_vorticity_corrected_end;
 		std::vector<Vector3r> m_vorticity_derivative;
 		std::vector<Vector3r> m_vorticity_dissipation;
 		std::vector<Vector3r> m_stream;
@@ -26,9 +26,9 @@ namespace SPH
 		std::vector<Vector3r> m_vorticity_equation;
 		std::vector<Vector3r> m_a_adv;
 		std::vector<Vector3r> m_v_adv;
-		std::vector<Vector3r> m_v_pre;
-		std::vector<Vector3r> m_v_post;
-		std::vector<Vector3r> m_x_pre;
+		std::vector<Vector3r> m_velocity_from_dfsph;
+		std::vector<Vector3r> m_velocity_corrected_end;
+		std::vector<Vector3r> m_position_from_dfsph;
 		std::vector<Vector3r> m_vorticity_rate_laplacian;
 		std::vector<Vector3r> m_vorticity_rate_gradient;
 		std::vector<Vector3r> m_gradV_x;

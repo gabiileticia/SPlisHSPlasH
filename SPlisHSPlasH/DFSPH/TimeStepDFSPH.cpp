@@ -155,7 +155,7 @@ void TimeStepDFSPH::step()
 	//////////////////////////////////////////////////////////////////////////
 	// Update the time step size, e.g. by using a CFL condition
 	//////////////////////////////////////////////////////////////////////////
-	sim->computeNonPressureForces_Vorticity();
+	sim->computeNonPressureForces_Vorticity();  //If we change order down, it seems that the particles accelerate
 	sim->updateTimeStepSize();
 	//////////////////////////////////////////////////////////////////////////
 	// compute new velocities only considering non-pressure forces
