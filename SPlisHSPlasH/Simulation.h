@@ -413,6 +413,7 @@ namespace SPH
 		void performNeighborhoodSearchSort();
 
 		void computeNonPressureForces();
+		void computeNonPressureForces_Vorticity();
 
 		void animateParticles();
 		void emitParticles();
