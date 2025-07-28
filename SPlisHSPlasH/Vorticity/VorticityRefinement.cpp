@@ -112,6 +112,270 @@ void VorticityRefinement::initParameters()
 
 }
 
+#ifdef USE_AVX
+
+void VorticityRefinement::step()
+{
+    Simulation *sim = Simulation::getCurrent();
+    const unsigned int numParticles = m_model->numActiveParticles();
+    if (numParticles == 0)
+        return;
+    
+    const unsigned int fluidModelIndex = m_model->getPointSetIndex();
+    const unsigned int nFluids = sim->numberOfFluidModels();
+    const unsigned int nBoundaries = sim->numberOfBoundaryModels();
+    FluidModel *model = m_model;
+
+    Real m_v_v;
+    ViscosityBase *m_visc = m_model->getViscosityBase();
+    if (!m_visc)
+        m_v_v = 0.0;
+    else
+        m_v_v = m_visc->model_viscosity();
+
+    const Real dt = TimeManager::getCurrent()->getTimeStepSize();
+    const Real h = sim->getSupportRadius();
+    const Real h2 = h*h;
+    Real vorticity_refinement_alpha = m_vorticity_refinement_alpha;
+
+
+    Real d = 3.0;
+    if (sim->is2DSimulation()) {
+        d = 2.0;
+    }
+
+    #pragma omp parallel default(shared)
+    {
+        
+        #pragma omp for schedule(static)  
+        for (int i = 0; i < (int)numParticles; i++)
+        {
+            // 1st loop: compute vorticity though linear field and compute dissipation
+            
+            //compute linear field vorticity based on velocity from dfsph on current timestep
+            //compute the vorticity generated on the advection step of current timestep
+            Vector3r &xi = m_model->getPosition(i);
+            Vector3r &vi = m_model->getVelocity(i);
+
+            const Vector3f8 xi_avx(xi);
+			const Vector3f8 vi_avx(vi);
+            
+            //saving initial velocity for analysis////////
+            m_velocity_from_dfsph[i] = vi;
+            /////////////////////////////////////////////
+
+            Vector3r& vorticity_linear_field = m_vorticity_linear_field[i];
+            vorticity_linear_field.setZero();
+            Vector3f8 vorticity_linear_field_avx;
+			vorticity_linear_field_avx.setZero();
+            
+            forall_fluid_neighbors_in_same_phase_avx(
+                const Scalarf8 Vj_avx = convert_zero(model->getVolume(0), count);
+				compute_Vj_gradW_samephase();
+
+                const Vector3f8 vj_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &model->getVelocity(0), count);
+                
+                //vorticity through linear field
+                vorticity_linear_field_avx += (vi_avx - vj_avx) % V_gradW;
+            );
+
+            vorticity_linear_field[0] += vorticity_linear_field_avx.x().reduce();
+			vorticity_linear_field[1] += vorticity_linear_field_avx.y().reduce();
+			vorticity_linear_field[2] += vorticity_linear_field_avx.z().reduce();
+
+            m_vorticity_equation[i] = m_vorticity_corrected_end[i] + dt * m_vorticity_derivative[i];
+            m_vorticity_dissipation[i] = m_vorticity_equation[i] - vorticity_linear_field;
+        }
+
+        #pragma omp for schedule(static)  
+        for (int i = 0; i < (int)numParticles; i++)
+        {
+            // 2nd loop: compute stream
+            Vector3r& xi = m_model->getPosition(i);
+            const Vector3f8 xi_avx(xi);
+    
+            Vector3r &stream = m_stream[i];
+            stream.setZero();
+
+            Vector3f8 stream_avx;
+			stream_avx.setZero();
+    
+            forall_fluid_neighbors_in_same_phase_avx(
+                const Scalarf8 Vj_avx = convert_zero(model->getVolume(0), count);
+				
+                Vector3f8 xij = xi_avx - xj_avx;
+
+                const Vector3f8 vort_diss_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &m_vorticity_dissipation[0], count);
+                // compute stream function
+                stream_avx += (vort_diss_avx) * (Vj_avx / (xij.norm()));
+            ); 
+
+            stream[0] += stream_avx.x().reduce();
+			stream[1] += stream_avx.y().reduce();
+			stream[2] += stream_avx.z().reduce();
+
+            stream = stream * 0.25 / M_PI;
+        }  
+
+        #pragma omp for schedule(static)  
+        for (int i = 0; i < (int)numParticles; i++)
+        {
+            // compute delta v and update v
+            Vector3r &vi = m_model->getVelocity(i);
+            Vector3r &xi = m_model->getPosition(i);
+            Vector3r &stream_i = m_stream[i];
+
+            const Vector3f8 xi_avx(xi);
+			const Vector3f8 vi_avx(vi);
+            const Vector3f8 stream_i_avx(m_stream[i]);
+    
+            Vector3r &delta_velocity = m_delta_velocity[i];
+            delta_velocity.setZero();
+
+            Vector3f8 delta_velocity_avx;
+			delta_velocity_avx.setZero();
+    
+            forall_fluid_neighbors_in_same_phase_avx(
+                const Scalarf8 Vj_avx = convert_zero(model->getVolume(0), count);
+				compute_Vj_gradW_samephase();
+
+                const Vector3f8 stream_j_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &m_stream[0], count);
+    
+                // compute delta velocity
+                delta_velocity_avx += (stream_i_avx - stream_j_avx) % V_gradW;
+            );
+            delta_velocity[0] += delta_velocity_avx.x().reduce();
+			delta_velocity[1] += delta_velocity_avx.y().reduce();
+			delta_velocity[2] += delta_velocity_avx.z().reduce();
+    
+            m_direction_velocity[i] = vi.dot(delta_velocity);
+            // refine linear velocity
+            vi += vorticity_refinement_alpha * delta_velocity;
+
+            // saving final velocity
+            m_velocity_corrected_end[i] = vi;
+        }
+
+        #pragma omp for schedule(static)  
+        for (int i = 0; i < (int)numParticles; i++)
+        {
+            //4th loop: compute final vorticity
+            Vector3r &xi = m_model->getPosition(i);
+            Vector3r &vi = m_model->getVelocity(i);
+
+            const Vector3f8 xi_avx(xi);
+			const Vector3f8 vi_avx(vi);
+
+            Vector3r& vorticity_corrected_end = m_vorticity_corrected_end[i];
+            vorticity_corrected_end.setZero();
+            Vector3f8 vorticity_corrected_end_avx;
+			vorticity_corrected_end_avx.setZero();
+            
+            forall_fluid_neighbors_in_same_phase_avx(
+                const Scalarf8 Vj_avx = convert_zero(model->getVolume(0), count);
+				compute_Vj_gradW_samephase();
+
+                const Vector3f8 vj_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &model->getVelocity(0), count);
+                
+                //vorticity through linear field
+                vorticity_corrected_end_avx += (vi_avx - vj_avx) % V_gradW;
+            );
+
+            vorticity_corrected_end[0] += vorticity_corrected_end_avx.x().reduce();
+			vorticity_corrected_end[1] += vorticity_corrected_end_avx.y().reduce();
+			vorticity_corrected_end[2] += vorticity_corrected_end_avx.z().reduce();
+        }
+
+        #pragma omp for schedule(static)  
+        for (int i = 0; i < (int)numParticles; i++)
+        {
+            //5th loop: compute vorticity derivative based on new vorticity
+
+            Vector3r &xi = m_model->getPosition(i);
+            Vector3r &vi = m_model->getVelocity(i);
+            
+            const Vector3f8 xi_avx(xi);
+			const Vector3f8 vi_avx(vi);
+            
+            Vector3r &vorticity_corrected_end = m_vorticity_corrected_end[i];
+            const Vector3f8 vorticity_corrected_end_i_avx(m_vorticity_corrected_end[i]);
+
+            Vector3r &vorticity_derivative = m_vorticity_derivative[i];
+            vorticity_derivative.setZero();
+
+            Vector3f8 vorticity_derivative_avx;
+			vorticity_derivative_avx.setZero();
+    
+            Vector3r &gradV_x = m_gradV_x[i];
+            gradV_x.setZero();
+            Vector3r &gradV_y = m_gradV_y[i];
+            gradV_y.setZero();
+            Vector3r &gradV_z = m_gradV_z[i];
+            gradV_z.setZero();
+
+            Vector3f8 gradV_x_avx;
+			gradV_x_avx.setZero();
+            Vector3f8 gradV_y_avx;
+			gradV_y_avx.setZero();
+            Vector3f8 gradV_z_avx;
+			gradV_z_avx.setZero();
+    
+            Vector3r &vorticity_rate_laplacian = m_vorticity_rate_laplacian[i];
+            vorticity_rate_laplacian.setZero();
+
+            Vector3f8 vorticity_rate_laplacian_avx;
+			vorticity_rate_laplacian_avx.setZero();
+    
+            forall_fluid_neighbors_in_same_phase_avx(
+                const Scalarf8 Vj_avx = convert_zero(model->getVolume(0), count);
+				compute_Vj_gradW_samephase();
+
+				const Vector3f8 vj_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &model->getVelocity(0), count);
+                Vector3f8 xij = xi_avx - xj_avx;
+                
+                const Vector3f8 vorticity_corrected_end_j_avx = convertVec_zero(&sim->getNeighborList(fluidModelIndex, fluidModelIndex, i)[j], &m_vorticity_corrected_end[0], count);
+                Vector3f8 vort_ij = vorticity_corrected_end_i_avx - vorticity_corrected_end_j_avx;
+                    
+                //  vorticity * gradV + v_v * laplacian(vorticity)
+                gradV_x_avx += V_gradW * (vj_avx.x() - vi_avx.x());
+                gradV_y_avx += V_gradW * (vj_avx.y() - vi_avx.y());
+                gradV_z_avx += V_gradW * (vj_avx.z() - vi_avx.z());
+    
+                vorticity_rate_laplacian_avx += V_gradW * ((vort_ij.dot(xij)) / (xij.squaredNorm() + 0.01 * h2));
+            );
+
+            gradV_x[0] += gradV_x_avx.x().reduce();
+			gradV_x[1] += gradV_x_avx.y().reduce();
+			gradV_x[2] += gradV_x_avx.z().reduce();
+
+            gradV_y[0] += gradV_y_avx.x().reduce();
+			gradV_y[1] += gradV_y_avx.y().reduce();
+			gradV_y[2] += gradV_y_avx.z().reduce();
+
+            gradV_z[0] += gradV_z_avx.x().reduce();
+			gradV_z[1] += gradV_z_avx.y().reduce();
+			gradV_z[2] += gradV_z_avx.z().reduce();
+
+            vorticity_rate_laplacian[0] += vorticity_rate_laplacian_avx.x().reduce();
+			vorticity_rate_laplacian[1] += vorticity_rate_laplacian_avx.y().reduce();
+			vorticity_rate_laplacian[2] += vorticity_rate_laplacian_avx.z().reduce();
+            vorticity_rate_laplacian = vorticity_rate_laplacian * 2 * (d + 2) * m_v_v;
+
+            Vector3r &vorticity_rate_gradient = m_vorticity_rate_gradient[i];
+            vorticity_rate_gradient.setZero();
+
+            vorticity_rate_gradient.x() = vorticity_corrected_end.dot(gradV_x);
+            vorticity_rate_gradient.y() = vorticity_corrected_end.dot(gradV_y);
+            vorticity_rate_gradient.z() = vorticity_corrected_end.dot(gradV_z);
+    
+            vorticity_derivative = vorticity_rate_gradient + vorticity_rate_laplacian;
+        }
+    }
+}
+
+
+#else
+
 void VorticityRefinement::step()
 {
     Simulation *sim = Simulation::getCurrent();
@@ -301,6 +565,7 @@ void VorticityRefinement::step()
     }
 }
 
+#endif
 
 void VorticityRefinement::reset()
 {
