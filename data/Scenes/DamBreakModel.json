@@ -1,6 +1,7 @@
 {
 	"Configuration": 
 	{
+		"pause": false,
 		"particleRadius": 0.025,
 		"numberOfStepsPerRenderUpdate": 4,
 		"density0": 1000, 

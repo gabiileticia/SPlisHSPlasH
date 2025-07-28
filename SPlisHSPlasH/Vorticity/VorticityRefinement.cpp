@@ -144,76 +144,23 @@ void VorticityRefinement::step()
 
     #pragma omp parallel default(shared)
     {
-
-        // //#pragma omp for schedule(static)  
-        // for (int i = 0; i < (int)numParticles; i++)
-        // {          
-        //     Vector3r& vi = m_model->getVelocity(i);
-        //     Vector3r& xi = m_model->getPosition(i);
-        //     Vector3r w;
-        //     Vector3r x0;
-        //     x0.x() = 0.2;
-        //     x0.y() = 0.2;
-        //     x0.z() = 0;
-
-        //     w.setZero();
-        //     w.z() = 5.0;
-        //     vi = w.cross(xi - x0);
-
-        // }
-
-        // for (int i = 0; i < (int)numParticles; i++)
-        // {
-
-        //     Vector3r &xi = m_model->getPosition(i);
-        //     Vector3r &vi = m_model->getVelocity(i);
-            
-        //     Vector3r& vorticity_linear_field = m_vorticity_linear_field[i];
-        //     vorticity_linear_field.setZero();
-
-            
-        //     forall_fluid_neighbors_in_same_phase(
-        //         Vector3r &vj = m_model->getVelocity(neighborIndex);
-        //         Real density_j = m_model->getDensity(neighborIndex);
-        //         Real mass_j = m_model->getMass(neighborIndex);
-                
-        //         Vector3r xij = xi - xj;
-        //         Vector3r gradW = sim->gradW(xij);
-        //         //vorticity through linear field
-        //         vorticity_linear_field += (mass_j / density_j) * (vi - vj).cross(gradW);
-
-        //     );
-
-        // }
         
         #pragma omp for schedule(static)  
         for (int i = 0; i < (int)numParticles; i++)
         {
-            //saving initial velocity for analysis
-            m_velocity_from_dfsph[i] = m_model->getVelocity(i);
+            // 1st loop: compute vorticity though linear field and compute dissipation
             
-            //how much was the velocity advected in the current timestep
-            // a_adv is how much the nonpressure forces accelerated on current timestep
-            // v_post is how much was the velocity at previous vorticity computation
-            m_v_adv[i] = m_velocity_corrected_end[i] + dt*m_a_adv[i];
-        }
-
-        #pragma omp for schedule(static)  
-        for (int i = 0; i < (int)numParticles; i++)
-        {
-
             //compute linear field vorticity based on velocity from dfsph on current timestep
             //compute the vorticity generated on the advection step of current timestep
             Vector3r &xi = m_model->getPosition(i);
             Vector3r &vi = m_model->getVelocity(i);
-
-            Vector3r& xi_pre = m_position_from_dfsph[i];
             
+            //saving initial velocity for analysis////////
+            m_velocity_from_dfsph[i] = vi;
+            /////////////////////////////////////////////
+
             Vector3r& vorticity_linear_field = m_vorticity_linear_field[i];
             vorticity_linear_field.setZero();
-
-            Vector3r& vorticity_advected = m_vorticity_advected[i];
-            vorticity_advected.setZero();
             
             forall_fluid_neighbors_in_same_phase(
                 Vector3r &vj = m_model->getVelocity(neighborIndex);
@@ -224,83 +171,16 @@ void VorticityRefinement::step()
                 Vector3r gradW = sim->gradW(xij);
                 //vorticity through linear field
                 vorticity_linear_field += (mass_j / density_j) * (vi - vj).cross(gradW);
-
-                Vector3r xij_pre = xi_pre - m_position_from_dfsph[neighborIndex];
-                Vector3r gradW_pre = sim->gradW(xij_pre);
-                vorticity_advected += (mass_j / density_j) * (m_v_adv[i] - m_v_adv[neighborIndex]).cross(gradW_pre);
             );
-        }
 
-
-        #pragma omp for schedule(static)  
-        for (int i = 0; i < (int)numParticles; i++)
-        {
-            // compute vorticity derivative based to be able to compute ideal vorticity at current timestep
-            // dont know yet if the derivative should use adv vorticity or previous vorticity
-            // dont know if derivative should use current position or previous position
-    
-            //Vector3r& xi = m_model->getPosition(i);
-            Vector3r& xi = m_position_from_dfsph[i];
-            Vector3r& vi = m_velocity_corrected_end[i];
-            Vector3r &vorticity_linear_field = m_vorticity_linear_field[i];
-            Vector3r &vorticity_derivative = m_vorticity_derivative[i];
-            vorticity_derivative.setZero();
-    
-            Vector3r &gradV_x = m_gradV_x[i];
-            gradV_x.setZero();
-            Vector3r &gradV_y = m_gradV_y[i];
-            gradV_y.setZero();
-            Vector3r &gradV_z = m_gradV_z[i];
-            gradV_z.setZero();
-    
-            Vector3r &vorticity_rate_gradient = m_vorticity_rate_gradient[i];
-            vorticity_rate_gradient.setZero();
-            Vector3r &vorticity_rate_laplacian = m_vorticity_rate_laplacian[i];
-            vorticity_rate_laplacian.setZero();
-    
-            forall_fluid_neighbors_in_same_phase(
-                Vector3r & vj = m_velocity_corrected_end[neighborIndex];
-                Real density_j = m_model->getDensity(neighborIndex);
-                Real mass_j = m_model->getMass(neighborIndex);
-    
-                Vector3r xij = xi - m_position_from_dfsph[neighborIndex];
-                //Vector3r xij = xi - xj;
-                Vector3r gradW = sim->gradW(xij);
-                Vector3r vort_ij = m_vorticity_corrected_end[i] - m_vorticity_corrected_end[neighborIndex];
-                    
-                //  vorticity * gradV + v_v * laplacian(vorticity)
-                gradV_x += (mass_j / density_j) * (vj.x() - vi.x()) * (gradW);
-                gradV_y += (mass_j / density_j) * (vj.y() - vi.y()) * (gradW);
-                gradV_z += (mass_j / density_j) * (vj.z() - vi.z()) * (gradW);
-    
-                // vorticity_rate_laplacian += 2 * (d + 2) * m_v_v * (mass_j / density_j) * ((vort_ij.dot(xij)) / (xij.squaredNorm() + 0.01 * h2)) * gradW;
-                vorticity_rate_laplacian += gradW * (mass_j / density_j) * ((vort_ij.dot(xij)) / (xij.squaredNorm() + 0.01 * h2));
-            );
-            vorticity_rate_laplacian = 2 * (d + 2) * m_v_v * vorticity_rate_laplacian;
-            //not sure about how this gradient should be computed
-            // vorticity_rate_gradient = m_vorticity_corrected_end[i].x() * gradV_x + m_vorticity_corrected_end[i].y() * gradV_y + m_vorticity_corrected_end[i].z() * gradV_z;
-
-            vorticity_rate_gradient.x() = m_vorticity_corrected_end[i].dot(gradV_x);
-            vorticity_rate_gradient.y() = m_vorticity_corrected_end[i].dot(gradV_y);
-            vorticity_rate_gradient.z() = m_vorticity_corrected_end[i].dot(gradV_z);
-    
-            vorticity_derivative = vorticity_rate_gradient + vorticity_rate_laplacian;
-    
-            Vector3r& vorticity_equation = m_vorticity_equation[i]; //compute vorticity equation
-            vorticity_equation = m_vorticity_corrected_end[i] + dt * vorticity_derivative;
-
-            m_direction_vort_dev[i] = m_vorticity_corrected_end[i].dot(vorticity_derivative);
-
-            Vector3r& vorticity_dissipation = m_vorticity_dissipation[i]; //compute vorticity dissipation
-            vorticity_dissipation.setZero();
-            
-            vorticity_dissipation = vorticity_equation - vorticity_linear_field;
+            m_vorticity_equation[i] = m_vorticity_corrected_end[i] + dt * m_vorticity_derivative[i];
+            m_vorticity_dissipation[i] = m_vorticity_equation[i] - vorticity_linear_field;
         }
 
         #pragma omp for schedule(static)  
         for (int i = 0; i < (int)numParticles; i++)
         {
-            // compute stream
+            // 2nd loop: compute stream
             Vector3r &xi = m_model->getPosition(i);
     
             Vector3r &stream = m_stream[i];
@@ -342,30 +222,19 @@ void VorticityRefinement::step()
             m_direction_velocity[i] = vi.dot(delta_velocity);
             // refine linear velocity
             vi += vorticity_refinement_alpha * delta_velocity;
-        }
 
+            // saving final velocity
+            m_velocity_corrected_end[i] = vi;
+        }
 
         #pragma omp for schedule(static)  
         for (int i = 0; i < (int)numParticles; i++)
-        {
-            
-            //updating stuff for next loop
-
-            // since we are running after nonpressure forces, we know how much will be the advection acceleration of next iteration
-            m_a_adv[i] = m_model->getAcceleration(i);
-
-            // velocity after correction
-            m_velocity_corrected_end[i] = m_model->getVelocity(i);
-
-            // position from dfsph (i didnt touch position, so this is the same we receive on beginning of vorticity step and is the initial one for next step)
-            m_position_from_dfsph[i] = m_model->getPosition(i);
-
+        {           
+            //4th loop: compute final vorticity
+            Vector3r &vi = m_model->getVelocity(i);
+            Vector3r &xi = m_model->getPosition(i);
 
             // compute final corrected vorticity
-            Vector3r& xi = m_model->getPosition(i);
-            Vector3r& vi = m_model->getVelocity(i);
-
-
             Vector3r& vorticity_corrected_end = m_vorticity_corrected_end[i];
             vorticity_corrected_end.setZero();
 
@@ -379,6 +248,55 @@ void VorticityRefinement::step()
                 //vorticity through linear field
                 vorticity_corrected_end += (mass_j / density_j) * (vi - vj).cross(gradW);
             );
+        }
+
+
+        #pragma omp for schedule(static)  
+        for (int i = 0; i < (int)numParticles; i++)
+        {
+            //5th loop: compute vorticity derivative based on new vorticity
+
+            Vector3r &xi = m_model->getPosition(i);
+            Vector3r &vi = m_model->getVelocity(i);
+            
+            Vector3r &vorticity_corrected_end = m_vorticity_corrected_end[i];
+            Vector3r &vorticity_derivative = m_vorticity_derivative[i];
+            vorticity_derivative.setZero();
+    
+            Vector3r &gradV_x = m_gradV_x[i];
+            gradV_x.setZero();
+            Vector3r &gradV_y = m_gradV_y[i];
+            gradV_y.setZero();
+            Vector3r &gradV_z = m_gradV_z[i];
+            gradV_z.setZero();
+    
+            Vector3r &vorticity_rate_gradient = m_vorticity_rate_gradient[i];
+            vorticity_rate_gradient.setZero();
+            Vector3r &vorticity_rate_laplacian = m_vorticity_rate_laplacian[i];
+            vorticity_rate_laplacian.setZero();
+    
+            forall_fluid_neighbors_in_same_phase(
+                Vector3r &vj = m_model->getVelocity(neighborIndex);
+                Real density_j = m_model->getDensity(neighborIndex);
+                Real mass_j = m_model->getMass(neighborIndex);
+
+                Vector3r xij = xi - xj;
+                Vector3r gradW = sim->gradW(xij);
+                Vector3r vort_ij = vorticity_corrected_end - m_vorticity_corrected_end[neighborIndex];
+                    
+                //  vorticity * gradV + v_v * laplacian(vorticity)
+                gradV_x += (mass_j / density_j) * (vj.x() - vi.x()) * (gradW);
+                gradV_y += (mass_j / density_j) * (vj.y() - vi.y()) * (gradW);
+                gradV_z += (mass_j / density_j) * (vj.z() - vi.z()) * (gradW);
+    
+                vorticity_rate_laplacian += 2 * (d + 2) * m_v_v * (mass_j / density_j) * ((vort_ij.dot(xij)) / (xij.squaredNorm() + 0.01 * h2)) * gradW;
+            );
+
+            vorticity_rate_gradient.x() = vorticity_corrected_end.dot(gradV_x);
+            vorticity_rate_gradient.y() = vorticity_corrected_end.dot(gradV_y);
+            vorticity_rate_gradient.z() = vorticity_corrected_end.dot(gradV_z);
+    
+            vorticity_derivative = vorticity_rate_gradient + vorticity_rate_laplacian;
         }
     }
 }
@@ -419,24 +337,24 @@ void SPH::VorticityRefinement::performNeighborhoodSearchSort()
 
     Simulation* sim = Simulation::getCurrent();
     auto const& d = sim->getNeighborhoodSearch()->point_set(m_model->getPointSetIndex());
-    d.sort_field(&m_vorticity_linear_field[0]);
-    d.sort_field(&m_vorticity_advected[0]);
+    // d.sort_field(&m_vorticity_linear_field[0]);
+    // d.sort_field(&m_vorticity_advected[0]);
     d.sort_field(&m_vorticity_corrected_end[0]);
     d.sort_field(&m_vorticity_derivative[0]);
-    d.sort_field(&m_vorticity_dissipation[0]);
-    d.sort_field(&m_stream[0]);
-    d.sort_field(&m_delta_velocity[0]);
-    d.sort_field(&m_vorticity_equation[0]);
-    d.sort_field(&m_a_adv[0]);
-    d.sort_field(&m_v_adv[0]);
-    d.sort_field(&m_velocity_from_dfsph[0]);
-    d.sort_field(&m_velocity_corrected_end[0]);
-    d.sort_field(&m_position_from_dfsph[0]);
-    d.sort_field(&m_vorticity_rate_laplacian[0]);
-    d.sort_field(&m_vorticity_rate_gradient[0]);
-    d.sort_field(&m_gradV_x[0]);
-    d.sort_field(&m_gradV_y[0]);
-    d.sort_field(&m_gradV_z[0]);
-    d.sort_field(&m_direction_velocity[0]);
-    d.sort_field(&m_direction_vort_dev[0]);    
+    // d.sort_field(&m_vorticity_dissipation[0]);
+    // d.sort_field(&m_stream[0]);
+    // d.sort_field(&m_delta_velocity[0]);
+    // d.sort_field(&m_vorticity_equation[0]);
+    // d.sort_field(&m_a_adv[0]);
+    // d.sort_field(&m_v_adv[0]);
+    // d.sort_field(&m_velocity_from_dfsph[0]);
+    // d.sort_field(&m_velocity_corrected_end[0]);
+    // d.sort_field(&m_position_from_dfsph[0]);
+    // d.sort_field(&m_vorticity_rate_laplacian[0]);
+    // d.sort_field(&m_vorticity_rate_gradient[0]);
+    // d.sort_field(&m_gradV_x[0]);
+    // d.sort_field(&m_gradV_y[0]);
+    // d.sort_field(&m_gradV_z[0]);
+    // d.sort_field(&m_direction_velocity[0]);
+    // d.sort_field(&m_direction_vort_dev[0]);    
 }

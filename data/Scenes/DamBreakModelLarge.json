@@ -1,6 +1,7 @@
 {
 	"Configuration": 
 	{
+		"pause": true,
 		"particleRadius": 0.025,
 		"numberOfStepsPerRenderUpdate": 4,
 		"density0": 1000, 
@@ -8,7 +9,7 @@
 		"gravitation": [0,-9.81,0], 
 		"cflMethod": 1, 
 		"cflFactor": 1,
-		"cflMaxTimeStepSize": 0.005,
+		"cflMaxTimeStepSize": 0.0025,
 		"maxIterations": 100,
 		"maxError": 0.05,
 		"maxIterationsV": 100,
@@ -20,7 +21,7 @@
 		"enableVTKExport": true,
 		"particleAttributes": "density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z",
 		"boundaryHandlingMethod": 0,
-		"stopAt": 5
+		"pauseAt": 30
 	},
 	"Materials": [
 		{
