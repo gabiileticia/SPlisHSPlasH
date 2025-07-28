@@ -30,6 +30,7 @@ VorticityRefinement::VorticityRefinement(FluidModel *model) :
     m_gradV_x.resize(model->numParticles(), Vector3r::Zero());
     m_gradV_y.resize(model->numParticles(), Vector3r::Zero());
     m_gradV_z.resize(model->numParticles(), Vector3r::Zero());
+    m_direction_velocity.resize(model->numParticles(), 0.0);
 
     m_vorticity_refinement_alpha = static_cast<Real>(1.0);
     
@@ -50,6 +51,7 @@ VorticityRefinement::VorticityRefinement(FluidModel *model) :
     model->addField({ "m_gradV_x", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_gradV_x[i][0]; }, true });
     model->addField({ "m_gradV_y", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_gradV_y[i][0]; }, true });
     model->addField({ "m_gradV_z", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_gradV_z[i][0]; }, true });
+    model->addField({ "m_direction_velocity", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_direction_velocity[i]; }, true });
 }
 
 VorticityRefinement::~VorticityRefinement(void)
@@ -72,6 +74,7 @@ VorticityRefinement::~VorticityRefinement(void)
     m_model->removeFieldByName("m_gradV_x");
     m_model->removeFieldByName("m_gradV_y");
     m_model->removeFieldByName("m_gradV_z");
+    m_model->removeFieldByName("m_direction_velocity");
 
 
     m_vorticity_linear_field.clear();
@@ -92,6 +95,7 @@ VorticityRefinement::~VorticityRefinement(void)
     m_gradV_x.clear();
     m_gradV_y.clear();
     m_gradV_z.clear();
+    m_direction_velocity.clear();
 }
 
 void VorticityRefinement::initParameters()
@@ -101,8 +105,6 @@ void VorticityRefinement::initParameters()
     setGroup(IDEAL_VORTICITY_REFINEMENT_ALPHA, "Fluid Model|Vorticity");
     setDescription(IDEAL_VORTICITY_REFINEMENT_ALPHA, "Ideal voricity refinment (alpha). Controls the amount of turbulence added to every simulation time step.");
     RealParameter* rparam = static_cast<RealParameter*>(getParameter(IDEAL_VORTICITY_REFINEMENT_ALPHA));
-
-
 
 }
 
@@ -181,7 +183,7 @@ void VorticityRefinement::step()
 
                 Vector3r xij_pre = xi_pre - m_position_from_dfsph[neighborIndex];
                 Vector3r gradW_pre = sim->gradW(xij_pre);
-                vorticity_advected += (mass_j / density_j) * (m_v_adv[i] - m_v_adv[j]).cross(gradW_pre);
+                vorticity_advected += (mass_j / density_j) * (m_v_adv[i] - m_v_adv[neighborIndex]).cross(gradW_pre);
             );
         }
 
@@ -244,6 +246,8 @@ void VorticityRefinement::step()
             vorticity_equation = m_vorticity_corrected_end[i] + dt * vorticity_derivative;
 
             Vector3r& vorticity_dissipation = m_vorticity_dissipation[i]; //compute vorticity dissipation
+            vorticity_dissipation.setZero();
+            
             vorticity_dissipation = vorticity_equation - vorticity_linear_field;
         }
 
@@ -289,6 +293,7 @@ void VorticityRefinement::step()
                 delta_velocity += (mass_j/ density_j) * (stream_i - m_stream[neighborIndex]).cross(gradW);
             );
     
+            m_direction_velocity[i] = vi.dot(delta_velocity);
             // refine linear velocity
             vi += vorticity_refinement_alpha * delta_velocity;
         }
@@ -387,4 +392,6 @@ void SPH::VorticityRefinement::performNeighborhoodSearchSort()
     d.sort_field(&m_gradV_x[0]);
     d.sort_field(&m_gradV_y[0]);
     d.sort_field(&m_gradV_z[0]);
+    d.sort_field(&m_direction_velocity[0]);
+    
 }

@@ -35,6 +35,7 @@ namespace SPH
 		std::vector<Vector3r> m_gradV_y;
 		std::vector<Vector3r> m_gradV_z;
 		std::vector<Vector3r> m_last_acceleration;
+		std::vector<Real> m_direction_velocity;
 
 		Real m_vorticity_refinement_alpha;
 
