@@ -1,3 +1,11 @@
+import sys
+import os
+os.chdir(r"C:\Users\gabri\Documents\thesis\SPlisHSPlasH")
+sys.path.append(r"C:\Users\gabri\Documents\thesis\SPlisHSPlasH\build\lib\Release")  # where pysplishsplash.pyd lives
+
+
+# Set the working directory to the SPlisHSPlasH base path
+
 import pysplishsplash as sph
 import pysplishsplash.Utilities.SceneLoaderStructs as Scenes
 import numpy as np
@@ -32,11 +40,13 @@ def main():
     scene.sim2D = True
 
     # change camera position
+    base.setValueFloat(base.STOP_AT, 10.0)
     base.setVec3ValueReal(base.CAMERA_POSITION, [0,2,8])
     base.setVec3ValueReal(base.CAMERA_LOOKAT, [0,2,0])
     base.setValueInt(base.RENDER_WALLS, 1)
 
-    scene.boundaryModels.append(Scenes.BoundaryData(meshFile="../models/UnitBox.obj", translation=[0., 3.0, 0.], scale=[3., 6., 3.], color=[0.1, 0.4, 0.5, 1.0], isWall=True, mapInvert=True, mapResolution=[25, 25, 25]))
+
+    scene.boundaryModels.append(Scenes.BoundaryData(meshFile="C:/Users/gabri/Documents/thesis/SPlisHSPlasH/data/models/UnitBox.obj", translation=[0., 3.0, 0.], scale=[4., 6., 4.], color=[0.1, 0.4, 0.5, 1.0], isWall=True, mapInvert=True, mapResolution=[25, 25, 25], isDynamic=False))
 
     scene.boundaryModels.append(Scenes.BoundaryData(meshFile="../models/Dragon_50k.obj", translation=[-0.45, 1, 0.], scale=[1.5,1.5,1.5], color=[0.5, 0.5, 0.5, 1.0], isAnimated=True, isWall=False, mapInvert=False, mapResolution=[25, 25, 25]))
 

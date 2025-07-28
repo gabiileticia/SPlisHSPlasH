@@ -4,3 +4,4 @@ bin/
 data/Scenes/Cache
 Utilities/Version.h
 output/
+*.ini
