@@ -151,9 +151,8 @@ void VorticityRefinement::step()
         for (int i = 0; i < (int)numParticles; i++)
         {
             // 1st loop: compute vorticity though linear field and compute dissipation
-            
             //compute linear field vorticity based on velocity from dfsph on current timestep
-            //compute the vorticity generated on the advection step of current timestep
+
             Vector3r &xi = m_model->getPosition(i);
             Vector3r &vi = m_model->getVelocity(i);
 
@@ -415,7 +414,6 @@ void VorticityRefinement::step()
             // 1st loop: compute vorticity though linear field and compute dissipation
             
             //compute linear field vorticity based on velocity from dfsph on current timestep
-            //compute the vorticity generated on the advection step of current timestep
             Vector3r &xi = m_model->getPosition(i);
             Vector3r &vi = m_model->getVelocity(i);
             
