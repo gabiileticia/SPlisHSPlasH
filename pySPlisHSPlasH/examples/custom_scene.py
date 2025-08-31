@@ -1,6 +1,6 @@
 
 import sys
-sys.path.append(r"C:\Users\gabri\Documents\thesis\SPlisHSPlasH\build\lib\Release")  # where pysplishsplash.pyd lives
+sys.path.append(r"/home/tn774736/Documents/SPlisHSPlasH/build/lib.linux-x86_64-cpython-39")
 
 import pysplishsplash as sph
 import pysplishsplash.Utilities.SceneLoaderStructs as Scenes

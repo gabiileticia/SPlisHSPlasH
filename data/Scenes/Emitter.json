@@ -20,7 +20,9 @@
 		"exponent": 7,
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
-		"boundaryHandlingMethod": 2
+		"boundaryHandlingMethod": 2,
+		"enableVTKExport": true,
+		"particleAttributes": "density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z"
 	},
 	"Materials": [
 		{

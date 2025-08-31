@@ -224,8 +224,9 @@ namespace Utilities
 			buffer[bytes] = '\0';
 #endif
 			std::string::size_type pos = std::string(buffer).find_last_of("\\/");
-			return std::string(buffer).substr(0, pos);
+			// return std::string(buffer).substr(0, pos);
 			// return "C:/Users/gabri/Documents/thesis/SPlisHSPlasH";
+			return "/home/tn774736/Documents/SPlisHSPlasH";
 
 		}
 

@@ -1,13 +1,13 @@
 {
 	"Configuration": 
 	{
-		"pause": true,
+		"pause": false,
 		"particleRadius": 0.025,
 		"numberOfStepsPerRenderUpdate": 4,
 		"density0": 1000, 
 		"simulationMethod": 4,
 		"gravitation": [0,-9.81,0], 
-		"cflMethod": 1, 
+		"cflMethod": 1, 	
 		"cflFactor": 1,
 		"cflMaxTimeStepSize": 0.0025,
 		"maxIterations": 100,
@@ -19,27 +19,30 @@
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
 		"enableVTKExport": true,
+		"enableStateExport": true,
 		"particleAttributes": "density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z",
 		"boundaryHandlingMethod": 0,
-		"pauseAt": 30
+		"stopAt": 15
 	},
 	"Materials": [
-		{
+		{	
 			"id": "Fluid",
-			"viscosity": 0.05,
-			"viscosityMethod": 1,
+			"viscosity": 0.0,
+			"viscosityMethod": 0,
 			"colorMapType": 1,
 			"vorticityMethod": 3,
-			"vorticityRefinementAlpha": 1.0
+			"vorticity": 0.4,
+			"vorticityRefinementAlpha": 1.3
+			
 		}
 	],
 	"RigidBodies": [
 		{
 			"geometryFile": "../models/UnitBox.obj",
-			"translation": [0,2.5,0],
+			"translation": [0,3.5,0],
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0,
-			"scale": [8, 5, 8],
+			"scale": [10, 7, 10],
 			"color": [0.1, 0.4, 0.6, 1.0], 
 			"isDynamic": false,
 			"isWall": true,
@@ -51,9 +54,9 @@
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-1.0, 0.0, -3.75],
-			"end": [1.0, 4.0, 3.75],
-			"translation": [-2.5, 0.05, 0.0],
+			"start": [-1.0, 0.0, -4.95],
+			"end": [0.2, 5.9, 4.95],
+			"translation": [-3.9, 0.05, 0.0],
 			"scale": [1, 1, 1]
 		}
 	]	
