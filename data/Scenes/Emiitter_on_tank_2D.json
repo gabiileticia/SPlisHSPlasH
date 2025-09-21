@@ -1,68 +1,82 @@
-{
+ {
 	"Configuration": 
 	{
-		"pause": true,
+		"timeStepSize": 0.01,
 		"sim2D": true, 
-		"particleRadius": 0.025,
-		"colorMapType": 1,
 		"numberOfStepsPerRenderUpdate": 4,
+		"particleRadius": 0.025, 
 		"density0": 1000, 
 		"simulationMethod": 4,
 		"gravitation": [0,-9.81,0], 
-		"cflMethod": 1, 
+		"cflMethod": 2, 
 		"cflFactor": 1,
 		"cflMaxTimeStepSize": 0.005,
 		"maxIterations": 100,
-		"maxError": 0.1,
+		"maxError": 0.05,
 		"maxIterationsV": 100,
 		"maxErrorV": 0.1,		
 		"stiffness": 50000,
 		"exponent": 7,
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
-		"boundaryHandlingMethod": 2,
 		"enableVTKExport": true,
+		"enableStateExport": true,
+		"stateExportFPS": 0.2,
+		"boundaryHandlingMethod": 2,
 		"particleAttributes": "density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z"
-
 	},
 	"Materials": [
 		{
 			"id": "Fluid",
-			"surfaceTension": 0.2,
-			"surfaceTensionMethod": 0,		
-			"viscosity": 0.01,
-			"viscosityMethod": 1, 
-			"vorticityMethod": 1, 
-			"vorticity": 0.1, 
-			"viscosityOmega": 0.05,
-			"inertiaInverse": 0.5,
-			"colorMapType": 1
+			"maxEmitterParticles": 10000,
+			"emitterReuseParticles": false,
+			"emitterBoxMin": [-2.0,-2.5,-2.0],
+			"emitterBoxMax": [1.0,4,2.0],
+			"viscosity": 0.0,
+			"viscosityMetholld": 0,
+			"colorMapType": 1,
+			"vorticityMethod": 3,
+			"vorticity": 0,
+			"vorticityRefinementAlpha": 0
 		}
 	],
 	"RigidBodies": [
 		{
+			"id": 1,
 			"geometryFile": "../models/UnitBox.obj",
-			"translation": [0,2.0,0],
+			"translation": [-1.5,5.5,0],
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0,
-			"scale": [4, 4, 1],
+			"scale": [4, 10, 0.5],
 			"color": [0.1, 0.4, 0.6, 1.0], 
 			"isDynamic": false,
 			"isWall": true,
 			"mapInvert": true, 
 			"mapThickness": 0.0,
-			"mapResolution": [30,30,20]
+			"mapResolution": [20,20,20]
+		}
+	], 
+	"Emitters": [
+		{
+			"width": 8, 
+			"height": 5, 
+			"translation": [-3.5,0.8,0.0],
+			"rotationAxis": [1, 0, 0],
+			"rotationAngle": 0,
+			"velocity": 3,
+			"type": 0,
+			"emitStartTime": 10
 		}
 	],
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-2.0, 0.0, -1],
-			"end": [-0.5, 1.5, 1],
-			"translation": [0.05, 0.05, 0.0],
+			"start": [-3, 0.5, -0.5],
+			"end": [0.2, 2, 0.5],
+			"translation": [0, 0, 0.0],
 			"scale": [1, 1, 1]
 		}
-	]	
+	]
 }
 
 

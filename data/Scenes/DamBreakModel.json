@@ -1,7 +1,7 @@
 {
 	"Configuration": 
 	{
-		"pause": false,
+		"pause": true,
 		"particleRadius": 0.025,
 		"numberOfStepsPerRenderUpdate": 4,
 		"density0": 1000, 
@@ -29,8 +29,9 @@
 			"viscosity": 0.05,
 			"viscosityMethod": 1,
 			"colorMapType": 1,
-			"vorticityMethod": 3,
-			"vorticityRefinementAlpha": 1.0
+			"vorticityMethod": 1,
+			"vorticityRefinementAlpha": 1.0,
+			"vorticity": 0.1
 		}
 	],
 	"RigidBodies": [

@@ -93,9 +93,112 @@ void TimeStepDFSPH::step()
 	const Real h = tm->getTimeStepSize();
 	const unsigned int nModels = sim->numberOfFluidModels();
 
-	//////////////////////////////////////////////////////////////////////////
+	const Real hh = sim->getSupportRadius();
+    const Real h2 = hh*hh;
+
+	const Real L = 4.0;
+
+	// //////////////////////////////////////////////////////////////////////////
 	// search the neighbors for all particles
 	//////////////////////////////////////////////////////////////////////////
+	//for (unsigned int m = 0; m < nModels; m++)
+	//{
+	FluidModel* fm = sim->getFluidModel(0);
+	const unsigned int numParticles = fm->numActiveParticles();
+	#pragma omp parallel default(shared)
+	{
+		#pragma omp for schedule(static)  
+		for (int i = 0; i < (int)numParticles; i++)
+		{
+			if (fm->getParticleState(i) == ParticleState::Active)
+			{
+				Vector3r& xi = fm->getPosition(i);
+				Vector3r& vi = fm->getVelocity(i);
+
+				if (xi.x() > L/2) {
+					xi.x()= std::fmod(xi.x() + L/2, L) - L/2 - h2;
+				}
+				if (xi.x() < -L/2) {
+					xi.x()= std::fmod(xi.x()+L/2, L) + L/2 + h2;
+				}
+				if (xi.y() > L/2) {
+					xi.y()= std::fmod(xi.y()+L/2, L) - L/2 - h2;
+				}
+				if (xi.y() < -L/2) {
+					xi.y()= std::fmod(xi.y()+L/2, L) + L/2 + h2;
+				}
+			}
+		}
+	}
+
+
+	FluidModel *fm_ghost = sim->getFluidModel(1);
+
+	int j = 0;
+	for (int i = 0; i < (int)numParticles; i++)
+	{
+		if (fm->getParticleState(i) == ParticleState::Active)
+		{
+			Vector3r &xi = fm->getPosition(i);
+			Vector3r &vi = fm->getVelocity(i);
+			if (xi[0] < (-L / 2 + 4 * hh))
+			{
+				fm_ghost->setPosition(j, xi + Vector3r(L, 0, 0));
+				fm_ghost->setVelocity(j, vi);
+				j = j + 1;
+				if (xi[1] < (-L / 2 + 4 * hh)) {
+					fm_ghost->setPosition(j, xi + Vector3r(L, L, 0));
+					fm_ghost->setVelocity(j, vi);
+					j = j + 1;
+				}
+				if (xi[1] > (L / 2 - 4 * hh)) {
+					fm_ghost->setPosition(j, xi + Vector3r(L, -L, 0));
+					fm_ghost->setVelocity(j, vi);
+					j = j + 1;
+				}
+			}
+			if (xi[0] > (L / 2 - 4 * hh))
+			{
+				fm_ghost->setPosition(j, xi - Vector3r(L, 0, 0));
+				fm_ghost->setVelocity(j, vi);
+				j = j + 1;
+				if (xi[1] < (-L / 2 + 4 * hh)) {
+					fm_ghost->setPosition(j, xi + Vector3r(-L, L, 0));
+					fm_ghost->setVelocity(j, vi);
+					j = j + 1;
+				}
+				if (xi[1] > (L / 2 - 4 * hh)) {
+					fm_ghost->setPosition(j, xi + Vector3r(-L, -L, 0));
+					fm_ghost->setVelocity(j, vi);
+					j = j + 1;
+				}
+			}
+
+			if (xi[1] < (-L / 2 + 4 * hh))
+			{
+				fm_ghost->setPosition(j, xi + Vector3r(0, L, 0));
+				fm_ghost->setVelocity(j, vi);
+				j = j + 1;
+			}
+
+			if (xi[1] > (L / 2 - 4 * hh))
+			{
+				fm_ghost->setPosition(j, xi - Vector3r(0, L, 0));
+				fm_ghost->setVelocity(j, vi);
+				j = j + 1;
+			}
+		}
+	}
+
+	for (int i = j; i < (int)fm_ghost->numParticles(); i++)
+	{
+		Vector3r& xi = fm_ghost->getPosition(i);
+		fm_ghost->setPosition(i, xi + Vector3r(3*L, 3*L, 0));
+		fm_ghost->setVelocity(i, Vector3r(0, 0, 0));
+	}
+
+	//fm_ghost->setNumActiveParticles(j);
+
 	sim->performNeighborhoodSearch();
 
 #ifdef USE_PERFORMANCE_OPTIMIZATION

@@ -19,22 +19,26 @@ MicropolarModel_Bender2017::MicropolarModel_Bender2017(FluidModel *model) :
 {
 	m_omega.resize(model->numParticles(), Vector3r::Zero());
 	m_angularAcceleration.resize(model->numParticles(), Vector3r::Zero());
-	m_vorticity_current_mp.resize(model->numParticles(), Vector3r::Zero());
+	m_vorticity_corrected_end.resize(model->numParticles(), Vector3r::Zero());
+	m_velocity_corrected_end.resize(model->numParticles(), Vector3r::Zero());
 	m_inertiaInverse = static_cast<Real>(0.5);
 	m_viscosityOmega = static_cast<Real>(0.1);
 
 	model->addField({ "angular velocity", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_omega[i][0]; }, true });
-	model->addField({ "vorticity_current", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_current_mp[i][0]; }, true });	
+	model->addField({ "vorticity_corrected_end", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_corrected_end[i][0]; }, true });
+	model->addField({ "m_velocity_corrected_end", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_velocity_corrected_end[i][0]; }, true });
 }
 
 MicropolarModel_Bender2017::~MicropolarModel_Bender2017(void)
 {
 	m_model->removeFieldByName("angular velocity");	
-	m_model->removeFieldByName("vorticity_current");
+	m_model->removeFieldByName("vorticity_corrected_end");
+	m_model->removeFieldByName("m_velocity_corrected_end");
 
 	m_omega.clear();
 	m_angularAcceleration.clear();
-	m_vorticity_current_mp.clear();
+	m_vorticity_corrected_end.clear();
+	m_velocity_corrected_end.clear();
 }
 
 void MicropolarModel_Bender2017::initParameters()
@@ -108,8 +112,8 @@ void MicropolarModel_Bender2017::step()
 			const Scalarf8 nut_density_i_intertiaInverse(nu_t / density_i * m_inertiaInverse);	
 			
 			//4 loop: compute final vorticity
-			Vector3r &vorticity_current = m_vorticity_current_mp[i];
-			vorticity_current.setZero();
+			Vector3r &vorticity_corrected_end = m_vorticity_corrected_end[i];
+			vorticity_corrected_end.setZero();
 			Vector3f8 vorticity_avx;
 			vorticity_avx.setZero();
 
@@ -150,11 +154,13 @@ void MicropolarModel_Bender2017::step()
 			angAcceli[0] += delta_angAcceli_avx.x().reduce();
 			angAcceli[1] += delta_angAcceli_avx.y().reduce();
 			angAcceli[2] += delta_angAcceli_avx.z().reduce();
-			vorticity_current[0] += vorticity_avx.x().reduce();
-			vorticity_current[1] += vorticity_avx.y().reduce();
-			vorticity_current[2] += vorticity_avx.z().reduce();
+			vorticity_corrected_end[0] += vorticity_avx.x().reduce();
+			vorticity_corrected_end[1] += vorticity_avx.y().reduce();
+			vorticity_corrected_end[2] += vorticity_avx.z().reduce();
 
 			angAcceli -= 2.0 * m_inertiaInverse * nu_t * omegai;
+
+			m_velocity_corrected_end[i] = vi;
 		}
 	}
 
@@ -209,8 +215,8 @@ void MicropolarModel_Bender2017::step()
 			angAcceli.setZero();
 			const Real density_i = m_model->getDensity(i);
 
-			Vector3r &vorticity_current = m_vorticity_current_mp[i];
-			vorticity_current.setZero();
+			Vector3r &vorticity_corrected_end = m_vorticity_corrected_end[i];
+			vorticity_corrected_end.setZero();
 
 			Real mass_i = m_model->getMass(i);
 
@@ -237,9 +243,10 @@ void MicropolarModel_Bender2017::step()
  				// difference curl 
  				ai += nu_t * 1.0/density_i * m_model->getMass(neighborIndex) * (omegaij.cross(gradW));
  				angAcceli += nu_t * 1.0/density_i * m_inertiaInverse * (m_model->getMass(neighborIndex) * (vi  - vj).cross(gradW));
-				vorticity_current += (mass_j /density_j) * (vi  - vj).cross(gradW);			
+				vorticity_corrected_end += (mass_j /density_j) * (vi  - vj).cross(gradW);			
 			);
 			angAcceli -= 2.0 * m_inertiaInverse * nu_t * omegai;
+			m_velocity_corrected_end[i] = vi;
 		}
 	}
 
@@ -260,7 +267,8 @@ void MicropolarModel_Bender2017::reset()
 	for (unsigned int i = 0; i < m_model->numParticles(); i++)
 	{
 		m_omega[i].setZero();
-		m_vorticity_current_mp[i].setZero();
+		m_vorticity_corrected_end[i].setZero();
+		m_velocity_corrected_end[i].setZero();
 	}
 }
 
