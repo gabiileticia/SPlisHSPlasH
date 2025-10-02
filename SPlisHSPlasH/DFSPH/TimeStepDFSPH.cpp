@@ -93,111 +93,127 @@ void TimeStepDFSPH::step()
 	const Real h = tm->getTimeStepSize();
 	const unsigned int nModels = sim->numberOfFluidModels();
 
-	const Real hh = sim->getSupportRadius();
-    const Real h2 = hh*hh;
+	//FluidModel * fm = sim->getFluidModel(0);
+	//const unsigned int numParticles = fm->numActiveParticles();
+	//if (tm->getTime() == 0) {
+	//	//initialize velocities for testing
+	//	for (int i = 0; i < numParticles; i++)
+	//	{
+	//		Vector3r& xi = fm->getPosition(i);
+	//		Vector3r& vi = fm->getVelocity(i);
 
-	const Real L = 4.0;
+	//		const Real x = xi.x();
+	//		const Real y = xi.y();
+
+	//		Real tal = 10.0;
+	//		const Real k = M_PI/2.0;
+
+	//		vi.x() = tal * std::sin(k*x) * std::cos(k*y);
+	//		vi.y() = - tal * std::cos(k * x) * std::sin(k * y);
+	//	}
+	//}
+		
+	//const Real hh = sim->getSupportRadius();
+ //   const Real h2 = hh*hh;
+
+	//const Real L = 4.0;
 
 	// //////////////////////////////////////////////////////////////////////////
 	// search the neighbors for all particles
 	//////////////////////////////////////////////////////////////////////////
 	//for (unsigned int m = 0; m < nModels; m++)
 	//{
-	FluidModel* fm = sim->getFluidModel(0);
-	const unsigned int numParticles = fm->numActiveParticles();
-	#pragma omp parallel default(shared)
-	{
-		#pragma omp for schedule(static)  
-		for (int i = 0; i < (int)numParticles; i++)
-		{
-			if (fm->getParticleState(i) == ParticleState::Active)
-			{
-				Vector3r& xi = fm->getPosition(i);
-				Vector3r& vi = fm->getVelocity(i);
+	//FluidModel* fm = sim->getFluidModel(0);
+	//const unsigned int numParticles = fm->numActiveParticles();
+	//#pragma omp parallel default(shared)
+	//{
+	//	#pragma omp for schedule(static)  
+	//	for (int i = 0; i < (int)numParticles; i++)
+	//	{
+	//		if (fm->getParticleState(i) == ParticleState::Active)
+	//		{
+	//			Vector3r& xi = fm->getPosition(i);
+	//			Vector3r& vi = fm->getVelocity(i);
 
-				if (xi.x() > L/2) {
-					xi.x()= std::fmod(xi.x() + L/2, L) - L/2 - h2;
-				}
-				if (xi.x() < -L/2) {
-					xi.x()= std::fmod(xi.x()+L/2, L) + L/2 + h2;
-				}
-				if (xi.y() > L/2) {
-					xi.y()= std::fmod(xi.y()+L/2, L) - L/2 - h2;
-				}
-				if (xi.y() < -L/2) {
-					xi.y()= std::fmod(xi.y()+L/2, L) + L/2 + h2;
-				}
-			}
-		}
-	}
+	//			if (xi.x() > L/2) {
+	//				xi.x()= std::fmod(xi.x() + L/2, L) - L/2 - h2;
+	//				//std::cout << "direita" << "\n";
+
+	//			}
+	//			if (xi.x() < -L/2) {
+	//				xi.x()= std::fmod(xi.x()+L/2, L) + L/2 + h2;
+	//				//std::cout << "esquerda" << "\n";
+	//			}
+	//			if (xi.y() > L/2) {
+	//				xi.y()= std::fmod(xi.y()+L/2, L) - L/2 - h2;
+	//				//std::cout << "cima" << "\n";
+	//			}
+	//			if (xi.y() < -L/2) {
+	//				xi.y()= std::fmod(xi.y()+L/2, L) + L/2 + h2;
+	//				//std::cout << "baixo" << "\n";
+	//			}
+	//		}
+	//	}
+	//}
 
 
-	FluidModel *fm_ghost = sim->getFluidModel(1);
+	//FluidModel *fm_ghost = sim->getFluidModel(1);
 
-	int j = 0;
-	for (int i = 0; i < (int)numParticles; i++)
-	{
-		if (fm->getParticleState(i) == ParticleState::Active)
-		{
-			Vector3r &xi = fm->getPosition(i);
-			Vector3r &vi = fm->getVelocity(i);
-			if (xi[0] < (-L / 2 + 4 * hh))
-			{
-				fm_ghost->setPosition(j, xi + Vector3r(L, 0, 0));
-				fm_ghost->setVelocity(j, vi);
-				j = j + 1;
-				if (xi[1] < (-L / 2 + 4 * hh)) {
-					fm_ghost->setPosition(j, xi + Vector3r(L, L, 0));
-					fm_ghost->setVelocity(j, vi);
-					j = j + 1;
+	//int j = 0;
+	//for (int i = 0; i < (int)numParticles; i++)
+	//{
+	//	if (fm->getParticleState(i) == ParticleState::Active)
+	//	{
+	//		const Vector3r &xi = fm->getPosition(i);
+	//		const Vector3r &vi = fm->getVelocity(i);
+	//		Real newx;
+	//		if (4 - abs(xi.x()) < hh) {
+	//			if (xi.x() > 0) {
+	//				newx = xi.x() + 1;
+	//			}
+	//			else {
+	//				newx = xi.x() - 1;
+	//			}
+	//			fm_ghost->setPosition(j, Vector3r(xi.x() + 10, xi.y(), 0));
+	//			Vector3r vghost = vi;
+	//			vghost.x() = -vi.x();   // flip normal component
+	//			fm_ghost->setVelocity(j, vghost);
+	//			j = j + 1;
+	//		}
+	/*		Real newy;
+			if (4 - std::abs(xi.y()) < hh) {
+				if (xi.y() > 0) {
+					newy = xi.y() + 2 * (4 - std::abs(xi.y()));
 				}
-				if (xi[1] > (L / 2 - 4 * hh)) {
-					fm_ghost->setPosition(j, xi + Vector3r(L, -L, 0));
-					fm_ghost->setVelocity(j, vi);
-					j = j + 1;
+				else {
+					newy = xi.y() - 2 * (4 - std::abs(xi.y()));
 				}
-			}
-			if (xi[0] > (L / 2 - 4 * hh))
-			{
-				fm_ghost->setPosition(j, xi - Vector3r(L, 0, 0));
-				fm_ghost->setVelocity(j, vi);
-				j = j + 1;
-				if (xi[1] < (-L / 2 + 4 * hh)) {
-					fm_ghost->setPosition(j, xi + Vector3r(-L, L, 0));
-					fm_ghost->setVelocity(j, vi);
-					j = j + 1;
-				}
-				if (xi[1] > (L / 2 - 4 * hh)) {
-					fm_ghost->setPosition(j, xi + Vector3r(-L, -L, 0));
-					fm_ghost->setVelocity(j, vi);
-					j = j + 1;
-				}
-			}
+			}	*/		
+		//}
+	//}
+	//std::cout << j << ":j" << "\n";
 
-			if (xi[1] < (-L / 2 + 4 * hh))
-			{
-				fm_ghost->setPosition(j, xi + Vector3r(0, L, 0));
-				fm_ghost->setVelocity(j, vi);
-				j = j + 1;
-			}
-
-			if (xi[1] > (L / 2 - 4 * hh))
-			{
-				fm_ghost->setPosition(j, xi - Vector3r(0, L, 0));
-				fm_ghost->setVelocity(j, vi);
-				j = j + 1;
-			}
-		}
-	}
-
-	for (int i = j; i < (int)fm_ghost->numParticles(); i++)
-	{
-		Vector3r& xi = fm_ghost->getPosition(i);
-		fm_ghost->setPosition(i, xi + Vector3r(3*L, 3*L, 0));
-		fm_ghost->setVelocity(i, Vector3r(0, 0, 0));
-	}
+	//for (int i = j; i < (int)fm_ghost->numParticles(); i++)
+	//{
+	//	Vector3r& xi = fm_ghost->getPosition(i);
+	//	fm_ghost->setPosition(i, xi + Vector3r(3*L, 3*L, 0));
+	//	fm_ghost->setVelocity(i, Vector3r(0, 0, 0));
+	//}
 
 	//fm_ghost->setNumActiveParticles(j);
+
+
+	//for (int i = 0; i < numParticles; i++)
+	//{
+	//	unsigned int numNeighbors = 0;
+	//	for (unsigned int pid = 0; pid < sim->numberOfPointSets(); pid++)
+	//	{
+	//		numNeighbors = sim->numberOfNeighbors(0, pid, i);
+	//		Vector3r& xi = fm->getPosition(pid);
+	//		//if (xi.x() < 0.3 && xi.x() > -0.3 && xi.y() < 0.3 && xi.y() > -0.3)
+	//		std::cout << numNeighbors << xi << "\n";
+	//	}
+	//}
 
 	sim->performNeighborhoodSearch();
 
