@@ -12,6 +12,7 @@ VorticityConfinement::VorticityConfinement(FluidModel *model) :
 	m_normOmega.resize(model->numParticles(), 0.0);
 
 	model->addField({ "angular velocity", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_omega[i][0]; } });
+	model->addField({ "vorticity_corrected_end", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_omega[i][0]; }, true });
 }
 
 VorticityConfinement::~VorticityConfinement(void)

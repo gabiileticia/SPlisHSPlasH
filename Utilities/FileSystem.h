@@ -353,6 +353,7 @@ namespace Utilities
 				std::istreambuf_iterator<char>());
 			fstream.close();
 
+
 			return str == md5Hash;
 		}
 

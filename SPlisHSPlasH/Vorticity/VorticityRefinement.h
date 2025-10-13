@@ -17,11 +17,14 @@ namespace SPH
 	{    
 	protected:
 		std::vector<Vector3r> m_vorticity_linear_field;
-		std::vector<Vector3r> m_vorticity_advected;
+		std::vector<Vector3r> m_vorticity_init;
 		std::vector<Vector3r> m_vorticity_corrected_end;
 		std::vector<Vector3r> m_vorticity_derivative;
 		std::vector<Vector3r> m_vorticity_dissipation;
 		std::vector<Vector3r> m_stream;
+		std::vector<Vector3r> m_stream2d;
+		std::vector<Vector3r> m_stream3d;
+		std::vector<Vector3r> m_stream2d_vol;
 		std::vector<Vector3r> m_delta_velocity;
 		std::vector<Vector3r> m_vorticity_equation;
 		std::vector<Vector3r> m_a_adv;
@@ -39,6 +42,7 @@ namespace SPH
 		std::vector<Real> m_direction_vort_dev;
 
 		Real m_vorticity_refinement_alpha;
+		Real m_dt;
 
 		virtual void initParameters();
 

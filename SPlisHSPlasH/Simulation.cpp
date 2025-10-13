@@ -496,24 +496,13 @@ void Simulation::computeNonPressureForces()
 	for (unsigned int i = 0; i < numberOfFluidModels(); i++)
 	{
 		FluidModel *fm = getFluidModel(i);
+		fm->computeVorticity();
 		fm->computeSurfaceTension();
 		fm->computeViscosity();
 		fm->computeDragForce();
 		fm->computeElasticity();
 		fm->computeXSPH();
-		//fm->computeVorticity();
 	}
-	STOP_TIMING_AVG
-}
-
-void Simulation::computeNonPressureForces_Vorticity()
-{
-	START_TIMING("computeNonPressureForces_Vorticity")
-		for (unsigned int i = 0; i < numberOfFluidModels(); i++)
-		{
-			FluidModel* fm = getFluidModel(i);
-			fm->computeVorticity();
-		}
 	STOP_TIMING_AVG
 }
 

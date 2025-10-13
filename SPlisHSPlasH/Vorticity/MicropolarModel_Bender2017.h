@@ -18,7 +18,8 @@ namespace SPH
 	protected:
 		std::vector<Vector3r> m_angularAcceleration;
 		std::vector<Vector3r> m_omega;	
-		std::vector<Vector3r> m_vorticity_current_mp;
+		std::vector<Vector3r> m_vorticity_corrected_end;
+		std::vector<Vector3r> m_velocity_corrected_end;
 		Real m_viscosityOmega;
 		Real m_inertiaInverse;
 
