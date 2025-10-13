@@ -409,6 +409,32 @@ void VorticityRefinement::step()
     if (sim->is2DSimulation()) {
         d = 2.0;
     }
+
+  /*  Vector3r a;
+    Vector3r b;
+    Vector3r dd;
+
+    dd.x() = -1;
+    dd.y() = -1;
+    dd.z() = -2;
+
+    a.x() = 2;
+    a.y() = 2;
+    a.z() = 2;
+
+    b.x() = 3;
+    b.y() = 4;
+    b.z() = 3;
+    std::cout << a.cross(b) << "\n";
+
+    Vector3r c;
+
+    c.x() = 0.02;
+    c.y() = 0.02;
+    c.z() = 0.02;
+
+    std::cout << sim->gradW(c) << "\n";
+    std::cout << dd.cross(sim->gradW(c)) << "\n";*/
     
     /*if (sim->is2DSimulation())
     {
@@ -488,10 +514,10 @@ void VorticityRefinement::step()
     
                // compute stream function
                if (sim->is2DSimulation()) {
-                   stream.z() -= (0.5 / M_PI) * (m_vorticity_dissipation[neighborIndex].z() * M_PI * r2) * log(xij.norm());
+                   stream.z() -= (0.5 / M_PI) * (m_vorticity_dissipation[neighborIndex].z() * M_PI * r2) * log(xij.norm() + 0.01 * h2);
                }
                else {
-                   stream += (0.25 / M_PI) * (m_vorticity_dissipation[neighborIndex] * mass_j / density_j) / (xij.norm());
+                   stream += (0.25 / M_PI) * (m_vorticity_dissipation[neighborIndex] * mass_j / density_j) / (xij.norm() + 0.01 * h2);
                }
             ); 
         }  
@@ -527,9 +553,9 @@ void VorticityRefinement::step()
             }*/
     
             // refine linear velocity
-            //if ((vorticity_refinement_alpha * delta_velocity).norm() < vi.norm()){
-            vi += vorticity_refinement_alpha * delta_velocity;
-            //}
+            if ((vorticity_refinement_alpha * delta_velocity).norm() < vi.norm()){
+                vi += vorticity_refinement_alpha * delta_velocity;
+            }
 
             // saving final velocity
             m_velocity_corrected_end[i] = vi;
