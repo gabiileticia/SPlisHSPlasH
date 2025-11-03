@@ -33,7 +33,7 @@
 			"colorMapType": 1,
 			"vorticityMethod": 3,
 			"vorticity": 0.4,
-			"vorticityRefinementAlpha": 1.3		
+			"vorticityRefinementAlpha": 0.0	
 		}
 	],
 	"RigidBodies": [

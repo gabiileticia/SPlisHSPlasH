@@ -1,7 +1,7 @@
 {
 	"Configuration": 
 	{
-		"pause": true,
+		"pause": false,
 		"particleRadius": 0.025,
 		"numberOfStepsPerRenderUpdate": 4,
 		"density0": 1000, 
@@ -19,58 +19,70 @@
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
 		"enableVTKExport": true,
-		"enableStateExport": true,
+		"enableStateExport": false,
 		"stateExportFPS": 0.2,
 		"particleAttributes": "angular velocity;m_vorticity_init;m_angularAcceleration;density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z",
 		"boundaryHandlingMethod": 0,
-		"stopAt": 15
+		"stopAt": 5
 	},
 	"Materials": [
-		{	
+		{
 			"id": "Fluid",
 			"viscosity": 0.05,
 			"viscosityMetholld": 0,
 			"colorMapType": 1,
 			"vorticityMethod": 3,
 			"vorticity": 0.4,
-			"vorticityRefinementAlpha": 1.3		
+			"vorticityRefinementAlpha": 1.3	
 		}
 	],
 	"RigidBodies": [
 		{
+			"id": 0,
 			"geometryFile": "../models/UnitBox.obj",
-			"translation": [0,3.5,0],
+			"translation": [0,1,0],
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0,
-			"scale": [10, 7, 10],
+			"scale": [5, 2, 5],
 			"color": [0.1, 0.4, 0.6, 1.0], 
 			"isDynamic": false,
 			"isWall": true,
 			"mapInvert": true, 
 			"mapThickness": 0.0,
-			"mapResolution": [40,30,15]
+			"mapResolution": [25,25,25]
 		},
 		{
+			"id": 1,
 			"geometryFile": "../models/UnitBox.obj",
-			"translation": [-2,3,3.5],
+			"translation": [0,0.1,0],
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0,
-			"scale": [1, 7, 7],
+			"scale": [1,0.1,0.2],
 			"color": [0.1, 0.4, 0.6, 1.0], 
-			"isDynamic": false,
-			"isWall": true,
-			"mapInvert": true, 
+			"density": 10000,
+			"isDynamic": true,
+			"isWall": false,
+			"mapInvert": false, 
 			"mapThickness": 0.0,
-			"mapResolution": [40,30,15]
+			"mapResolution": [20,20,20]
+		}
+	],
+	"TargetVelocityMotorHingeJoints": [
+		{
+			"bodyID1": 1,
+			"bodyID2": 0,
+			"position": [0,0,0],
+            "axis": [0,1,0],
+            "target": -6
 		}
 	],
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-1.0, 0.0, -4.95],
-			"end": [0.2, 5.9, 4.95],
-			"translation": [-3.9, 0.05, 0.0],
-			"scale": [1, 1, 1]
+			"start": [-1.5, -0.5, -1.5],
+			"end": [1.5, 0.5, 1.5],
+			"translation": [0.0, 0.6, 0.0],
+			"scale": [1,0.75,1]
 		}
 	]	
 }
