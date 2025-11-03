@@ -4,10 +4,11 @@
 		"pause": true,
 		"sim2D": false, 
 		"particleRadius": 0.025,
+		"colorMapType": 1,
 		"numberOfStepsPerRenderUpdate": 4,
 		"density0": 1000, 
 		"simulationMethod": 4,
-		"gravitation": [0,-9.81,0], 
+		"gravitation": [0,0,0], 
 		"cflMethod": 1, 
 		"cflFactor": 1,
 		"cflMaxTimeStepSize": 0.005,
@@ -19,74 +20,59 @@
 		"exponent": 7,
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
+		"boundaryHandlingMethod": 0,
 		"enableVTKExport": true,
 		"particleAttributes": "density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z",
-		"boundaryHandlingMethod": 0,
-		"stopAt": 5
+		"stopAt": 3
 	},
 	"Materials": [
 		{
-			"id": "Fluid",
+			"id": "Fluid1",	
 			"viscosity": 0.01,
 			"viscosityMethod": 1, 
-			"colorMapType": 1,
-			"vorticityMethod": 3,
-			"vorticity": 0.1, 
+			"vorticityMethod": 2, 
+			"vorticity": 0.2, 
 			"viscosityOmega": 0.01,
 			"inertiaInverse": 0.5,
-			"vorticityRefinementAlpha": -1.0
+			"colorMapType": 0,
+			"vorticityRefinementAlpha": 2.0
 		}
 	],
 	"RigidBodies": [
 		{
 			"geometryFile": "../models/UnitBox.obj",
-			"translation": [0,2,0],
+			"translation": [0,0,0],
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0,
-			"scale": [6, 4, 3],
+			"scale": [30, 1, 0.5],
 			"color": [0.1, 0.4, 0.6, 1.0], 
 			"isDynamic": false,
 			"isWall": true,
 			"mapInvert": true, 
 			"mapThickness": 0.0,
-			"mapResolution": [40,30,20]
-		},
-		{
-			"geometryFile": "../models/Dragon_50k.obj",
-			"translation": [0.5,0,0.0],
-			"rotationAxis": [0, 1, 0],
-			"rotationAngle": 0,
-			"scale": [1, 1, 1], 
-			"color": [0.1, 0.4, 0.6, 1.0], 
-			"isDynamic": false,
-			"isWall": false,
-			"mapInvert": false, 
-			"mapThickness": 0.0,
-			"mapResolution": [20,20,20]
-		},
-		{
-			"geometryFile": "../models/Dragon_50k.obj",
-			"translation": [2.0,0.0,0.0],
-			"rotationAxis": [0, 1, 0],
-			"rotationAngle": 0,
-			"scale": [1, 1, 1], 
-			"color": [0.1, 0.4, 0.6, 1.0], 
-			"isDynamic": false,
-			"isWall": false,
-			"mapInvert": false, 
-			"mapThickness": 0.0,
-			"mapResolution": [20,20,20]
+			"mapResolution": [30,30,20]
 		}
 	],
 	"FluidBlocks": [
 		{
+			"id": "Fluid1",
 			"denseMode": 0,
-			"start": [-0.5, 0.0, -0.5],
-			"end": [0.5, 1.5, 0.5],
-			"translation": [-2.45, 0.0, 0.0],
-			"scale": [1, 2, 1]
+			"start": [-10.0, 0.0, -0.25],
+			"end": [10, 0.5, 0.25],
+			"translation": [0, 0, 0.0],
+			"scale": [1, 1, 1],
+			"initialVelocity": [2.0, 0.0, 0]
+		},
+		{
+			"id": "Fluid1",
+			"denseMode": 0,
+			"start": [-10, -0.5, -0.25],
+			"end": [10.0, 0.05, 0.25],
+			"translation": [0, 0, 0.0],
+			"scale": [1, 1, 1],
+			"initialVelocity": [-0.8, 0.0, 0]
 		}
-	]
+	]	
 }
 
 

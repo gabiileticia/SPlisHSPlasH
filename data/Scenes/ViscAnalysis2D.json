@@ -1,0 +1,162 @@
+{
+	"Configuration": 
+	{
+		"pause": true,
+		"sim2D": true, 
+		"particleRadius": 0.025,
+		"colorMapType": 1,
+		"numberOfStepsPerRenderUpdate": 4,
+		"density0": 1000, 
+		"simulationMethod": 4,
+		"gravitation": [0,0,0], 
+		"cflMethod": 1, 
+		"cflFactor": 1,
+		"cflMaxTimeStepSize": 0.005,
+		"maxIterations": 100,
+		"maxError": 0.1,
+		"maxIterationsV": 100,
+		"maxErrorV": 0.1,		
+		"stiffness": 50000,
+		"exponent": 7,
+		"velocityUpdateMethod": 0,
+		"enableDivergenceSolver": true,
+		"boundaryHandlingMethod": 2,
+		"enableVTKExport": true,
+		"particleAttributes": "density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z"
+
+	},
+	"Materials": [
+		{
+			"id": "Fluid",
+			"surfaceTensionMethod": 0,		
+			"viscosity": 0.0,
+			"viscosityMethod": 0, 
+			"vorticityMethod": 3, 
+			"vorticityRefinementAlpha": 1.0,
+			"colorMapType": 1
+		},
+		{
+			"id": "Fluid2",
+			"surfaceTensionMethod": 0,		
+			"viscosity": 0.01,
+			"viscosityMethod": 1, 
+			"vorticityMethod": 3, 
+			"vorticityRefinementAlpha": 1.0,
+			"colorMapType": 1
+		},
+		{
+			"id": "Fluid3",
+			"surfaceTensionMethod": 0,		
+			"viscosity": 0.015,
+			"viscosityMethod": 1, 
+			"vorticityMethod": 3, 
+			"vorticityRefinementAlpha": 1.0,
+			"colorMapType": 1
+		},
+		{
+			"id": "Fluid4",
+			"surfaceTensionMethod": 0,		
+			"viscosity": 0.02,
+			"viscosityMethod": 1, 
+			"vorticityMethod": 3, 
+			"vorticityRefinementAlpha": 1.0,
+			"colorMapType": 1
+		}
+
+	],
+	"RigidBodies": [
+		{
+			"geometryFile": "../models/UnitBox.obj",
+			"translation": [-6,0,0],
+			"rotationAxis": [1, 0, 0],
+			"rotationAngle": 0,
+			"scale": [3, 3, 1],
+			"color": [0.1, 0.4, 0.6, 1.0], 
+			"isDynamic": false,
+			"isWall": true,
+			"mapInvert": true, 
+			"mapThickness": 0.0,
+			"mapResolution": [30,30,20]
+		},
+		{
+			"geometryFile": "../models/UnitBox.obj",
+			"translation": [-2,0,0],
+			"rotationAxis": [1, 0, 0],
+			"rotationAngle": 0,
+			"scale": [3, 3, 1],
+			"color": [0.1, 0.4, 0.6, 1.0], 
+			"isDynamic": false,
+			"isWall": true,
+			"mapInvert": true, 
+			"mapThickness": 0.0,
+			"mapResolution": [30,30,20]
+		},
+		{
+			"geometryFile": "../models/UnitBox.obj",
+			"translation": [2,0,0],
+			"rotationAxis": [1, 0, 0],
+			"rotationAngle": 0,
+			"scale": [3, 3, 1],
+			"color": [0.1, 0.4, 0.6, 1.0], 
+			"isDynamic": false,
+			"isWall": true,
+			"mapInvert": true, 
+			"mapThickness": 0.0,
+			"mapResolution": [30,30,20]
+		},
+		{
+			"geometryFile": "../models/UnitBox.obj",
+			"translation": [6,0,0],
+			"rotationAxis": [1, 0, 0],
+			"rotationAngle": 0,
+			"scale": [3, 3, 1],
+			"color": [0.1, 0.4, 0.6, 1.0], 
+			"isDynamic": false,
+			"isWall": true,
+			"mapInvert": true, 
+			"mapThickness": 0.0,
+			"mapResolution": [30,30,20]
+		}
+	],
+	"FluidBlocks": [
+		{
+			"id": "Fluid",
+			"denseMode": 1,
+			"start": [-7.5, -1.5, -0.5],
+			"end": [-4.5, 1.5, 0.5],
+			"translation": [0.05, 0.05, 0.0],
+			"scale": [1, 1, 1],
+			"initialAngularVelocity": [0.0, 0.0, 0.5]
+		},
+		{
+			"id": "Fluid2",
+			"denseMode": 1,
+			"start": [-3.5, -1.5, -0.5],
+			"end": [-0.5, 1.5, 0.5],
+			"translation": [0.05, 0.05, 0.0],
+			"scale": [1, 1, 1],
+			"initialAngularVelocity": [0.0, 0.0, 0.5]
+		},
+		{
+			"id": "Fluid3",
+			"denseMode": 1,
+			"start": [0.5, -1.5, -0.5],
+			"end": [3.5, 1.5, 0.5],
+			"translation": [0.05, 0.05, 0.0],
+			"scale": [1, 1, 1],
+			"initialAngularVelocity": [0.0, 0.0, 0.5]
+		},
+		{
+			"id": "Fluid4",
+			"denseMode": 1,
+			"start": [4.5, -1.5, -0.5],
+			"end": [7.5, 1.5, 0.5],
+			"translation": [0.05, 0.05, 0.0],
+			"scale": [1, 1, 1],
+			"initialAngularVelocity": [0.0, 0.0, 0.5]
+		}
+	]	
+}
+
+
+

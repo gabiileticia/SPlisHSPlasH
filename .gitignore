@@ -5,3 +5,7 @@ data/Scenes/Cache
 Utilities/Version.h
 output/
 *.ini
+*.bgeo
+*.md5
+*.cdm
+*.bin

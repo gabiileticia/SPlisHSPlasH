@@ -19,9 +19,7 @@
 		"exponent": 7,
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
-		"enableVTKExport": true,
-		"boundaryHandlingMethod": 2,
-		"particleAttributes": "density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z"
+		"boundaryHandlingMethod": 2
 	},
 	"Materials": [
 		{
@@ -30,6 +28,10 @@
 			"emitterReuseParticles": false,
 			"emitterBoxMin": [-2.0,-2.5,-2.0],
 			"emitterBoxMax": [1.0,4,2.0],
+			"viscosityMethod": 1,
+			"viscosity": 0.01,
+			"dragMethod": 2, 
+			"drag": 10.0,
 			"colorMapType": 1
 		}
 	],

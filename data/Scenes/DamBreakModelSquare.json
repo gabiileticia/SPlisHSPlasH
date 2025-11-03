@@ -19,7 +19,7 @@
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
 		"enableVTKExport": true,
-		"particleAttributes": "m_is_vortex;m_lambdatwo;angular velocity;m_vorticity_init;m_angularAcceleration;density;m_direction_vort_dev;m_direction_velocity;velocity;m_masses;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z",
+		"particleAttributes": "angular velocity;m_vorticity_init;m_angularAcceleration;density;m_direction_vort_dev;m_direction_velocity;velocity;m_masses;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z",
 		"boundaryHandlingMethod": 0,
 		"stopAt": 5
 	},
@@ -29,18 +29,18 @@
 			"viscosity": 0.05,
 			"viscosityMethod": 1,
 			"colorMapType": 1,
-			"vorticityMethod": 3,
-			"vorticityRefinementAlpha": 1.5,
+			"vorticityMethod": 3 ,
+			"vorticityRefinementAlpha": 3.0,
 			"vorticity": 0.1
 		}
 	],
 	"RigidBodies": [
 		{
 			"geometryFile": "../models/UnitBox.obj",
-			"translation": [0,1.5,0],
+			"translation": [-0.5,1.5,0],
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0,
-			"scale": [4, 3, 1.5],
+			"scale": [3, 3, 4],
 			"color": [0.1, 0.4, 0.6, 1.0], 
 			"isDynamic": false,
 			"isWall": true,
@@ -52,8 +52,8 @@
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-0.5, 0.0, -0.5],
-			"end": [0.5, 1.0, 0.5],
+			"start": [-0.5, 0.0, -1.5],
+			"end": [0.5, 1.0, 1.5],
 			"translation": [-1.45, 0.05, 0.0],
 			"scale": [1, 1, 1]
 		}

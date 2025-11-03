@@ -1,7 +1,7 @@
 {
 	"Configuration": 
 	{
-		"particleRadius": 0.02,
+		"particleRadius": 0.025,
 		"numberOfStepsPerRenderUpdate": 4,
 		"density0": 1000, 
 		"simulationMethod": 4,
@@ -17,10 +17,8 @@
 		"exponent": 7,
 		"velocityUpdateMethod": 0,
 		"enableDivergenceSolver": true,
-		"enableVTKExport": true,
-		"boundaryHandlingMethod": 2,
-		"particleAttributes": "m_vorticity_init;density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z"
-
+		"particleAttributes": "velocity",
+		"boundaryHandlingMethod": 2
 	},
 	"Materials": [
 		{
@@ -29,7 +27,7 @@
 			"surfaceTension": 0.2,
 			"surfaceTensionMethod": 0,
 			"viscosity": 0.01,
-			"viscosityMethod": 0
+			"viscosityMethod": 1
 		}
 	],
 	"RigidBodies": [
@@ -53,7 +51,7 @@
 			"translation": [0,0.1,0],
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0,
-			"scale": [1,0.1,0.2],
+			"scale": [1.5,0.1,0.2],
 			"color": [0.1, 0.4, 0.6, 1.0], 
 			"density": 10000,
 			"isDynamic": true,
@@ -69,7 +67,8 @@
 			"bodyID2": 0,
 			"position": [0,0,0],
             "axis": [0,1,0],
-            "target": -6
+            "repeatSequence": 1,
+            "targetSequence": [0,-5,1,5,2,-5]
 		}
 	],
 	"FluidBlocks": [

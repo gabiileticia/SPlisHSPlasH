@@ -21,6 +21,9 @@ namespace SPH
 		std::vector<Vector3r> m_vorticity_corrected_end;
 		std::vector<Vector3r> m_vorticity_derivative;
 		std::vector<Vector3r> m_vorticity_dissipation;
+		std::vector<Vector3r> m_vorticity_final_dissipation;
+		std::vector<Real> m_lambdatwo;
+		std::vector<Real> m_is_vortex;
 		std::vector<Vector3r> m_stream;
 		std::vector<Vector3r> m_stream2d;
 		std::vector<Vector3r> m_stream3d;
@@ -40,8 +43,11 @@ namespace SPH
 		std::vector<Vector3r> m_last_acceleration;
 		std::vector<Real> m_direction_velocity;
 		std::vector<Real> m_direction_vort_dev;
-
+		std::vector<Vector3r> m_velocity_advected;
+		std::vector<Vector3r> m_acceleration_vr;
+		std::vector<Vector3r> m_position_advected;
 		Real m_vorticity_refinement_alpha;
+		//Real m_v_v;
 		Real m_dt;
 
 		virtual void initParameters();

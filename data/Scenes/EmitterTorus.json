@@ -1,4 +1,4 @@
-{
+ {
 	"Configuration": 
 	{
 		"pause": true,
@@ -22,7 +22,7 @@
 		"enableVTKExport": true,
 		"particleAttributes": "density;m_direction_vort_dev;m_direction_velocity;velocity;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z",
 		"boundaryHandlingMethod": 0,
-		"stopAt": 3
+		"stopAt": 10
 	},
 	"Simulation": 
 	{
@@ -57,97 +57,76 @@
 			"viscosityMethod": 1, 
 			"colorMapType": 1,
 			"vorticityMethod": 1,
-			"vorticity": 0.2, 
+			"vorticity": 0.1, 
 			"viscosityOmega": 0.01,
 			"inertiaInverse": 0.5,
-			"vorticityRefinementAlpha": 1.3
+			"vorticityRefinementAlpha": 0.0
 		}
 	],
 	"RigidBodies": [
 		{
-			"id": 1,
 			"geometryFile": "../models/UnitBox.obj",
-			"translation": [0,4,0],
+			"translation": [0,1,0],
 			"rotationAxis": [1, 0, 0],
 			"rotationAngle": 0,
-			"scale": [3.1, 8, 1.6],
+			"scale": [3.0, 2.1, 3.0],
 			"color": [0.1, 0.4, 0.6, 1.0], 
 			"isDynamic": false,
 			"isWall": true,
-			"restitution" : 0.6,
-			"friction" : 0.0,
-			"collisionObjectType": 2,
-			"collisionObjectScale": [3.1, 8, 1.6],	
-			"invertSDF": true,
 			"mapInvert": true, 
 			"mapThickness": 0.0,
-			"mapResolution": [30,40,15]
+			"mapResolution": [30,25,20]
 		},
 		{
-			"id": 2,
-			"geometryFile": "../models/sphere.obj",
+			"geometryFile": "../models/torus.obj",
 			"isDynamic": 1, 
-			"density": 300, 
-			"translation": [-0.5,1.0,0],
-			"rotationAxis": [1, 0, 0],
+			"density": 100, 
+			"translation": [0.0,0.3,0.0],
+			"rotationAxis": [0, 0, 1],
 			"rotationAngle": 0.0,
 			"scale": [0.2, 0.2, 0.2],
-			"velocity": [0,0,0],
 			"restitution" : 0.6,
 			"friction" : 0.2,
-			"color": [0.3, 0.5, 0.8, 1.0], 
-			"collisionObjectType": 1,
-			"collisionObjectScale": [0.2, 0.2, 0.2],
+			"color": [0.5, 0.2, 0.6, 1.0], 
+			"collisionObjectType": 4,
+			"collisionObjectScale": [0.2, 0.1, 0.2],
 			"mapInvert": false, 
 			"mapThickness": 0.0,
 			"mapResolution": [20,20,20]
+		}
+	], 
+	"Emitters": [
+		{
+			"width": 7, 
+			"translation": [1.2,0.4,1.0],
+			"rotationAxis": [0, 1, 0],
+			"rotationAngle": 3.1415926535897932384626433832795,
+			"velocity": 2,
+			"type": 1,
+			"emitStartTime": 0.1,
+			"emitEndTime": 7
 		},
 		{
-			"id": 3,
-			"geometryFile": "../models/sphere.obj",
-			"isDynamic": 1, 
-			"density": 300, 
-			"translation": [0,2.0,0],
+			"width": 7, 
+			"translation": [-1.2,0.4,-1.0],
 			"rotationAxis": [1, 0, 0],
-			"rotationAngle": 0.0,
-			"scale": [0.2, 0.2, 0.2],
-			"velocity": [0,0,0],
-			"restitution" : 0.6,
-			"friction" : 0.2,
-			"color": [0.3, 0.5, 0.8, 1.0], 
-			"collisionObjectType": 1,
-			"collisionObjectScale": [0.2, 0.2, 0.2],
-			"mapInvert": false, 
-			"mapThickness": 0.0,
-			"mapResolution": [20,20,20]
-		},
-		{
-			"id": 4,
-			"geometryFile": "../models/sphere.obj",
-			"isDynamic": 1, 
-			"density": 300, 
-			"translation": [0.5,3.0,0],
-			"rotationAxis": [1, 0, 0],
-			"rotationAngle": 0.0,
-			"scale": [0.2, 0.2, 0.2],
-			"velocity": [0,0,0],
-			"restitution" : 0.6,
-			"friction" : 0.2,
-			"color": [0.3, 0.5, 0.8, 1.0], 
-			"collisionObjectType": 1,
-			"collisionObjectScale": [0.2, 0.2, 0.2],
-			"mapInvert": false, 
-			"mapThickness": 0.0,
-			"mapResolution": [20,20,20]
+			"rotationAngle": 3.1415926535897932384626433832795,
+			"velocity": 2,
+			"type": 1,
+			"emitStartTime": 0.1,
+			"emitEndTime": 7
 		}
 	],
 	"FluidBlocks": [
 		{
 			"denseMode": 0,
-			"start": [-1.5, 0.0, -0.75],
-			"end": [1.5, 0.5, 0.75],
-			"translation": [0, 0.0, 0.0],
-			"scale": [1,1,1]
+			"start": [-1.25, 0.0, -0.5],
+			"end": [1.25, 0.2, 0.5],
+			"translation": [0.0, 0.0, 0.0],
+			"scale": [1, 1, 1]
 		}
-	]	
+	]
 }
+
+
+
