@@ -3,40 +3,28 @@ import os
 os.chdir(r"C:\Users\gabri\Documents\thesis\SPlisHSPlasH")
 sys.path.append(r"C:\Users\gabri\Documents\thesis\SPlisHSPlasH\build\lib\Release")  # where pysplishsplash.pyd lives
 
-
-# Set the working directory to the SPlisHSPlasH base path
-
 import pysplishsplash as sph
 import pysplishsplash.Utilities.SceneLoaderStructs as Scenes
 import numpy as np
 import math
 from scipy.spatial.transform import Rotation as R
 
-
 def time_step_callback():  
     sim = sph.Simulation.getCurrent()
-    # boundary = sim.getBoundaryModel(0)
+    # boundary = sim.getBoundaryModel(1)
     # animatedBody = boundary.getRigidBodyObject()
-    fluid = sim.getFluidModel(0)
-
     tm = sph.TimeManager.getCurrent()
     t = tm.getTime()
 
+    a = 2
+    fluid = sim.getFluidModel(0)
     n = fluid.numActiveParticles()
-    if (t < 0.01):
+    if (t < 0.1):
         for i in range(n):
             pos = fluid.getPosition(i)  # numpy float32 array [x, y, z]
-            x, y, z = pos[0], pos[2], pos[1]
-
-            tu = 10
-            k = math.pi/2
-            u = tu * np.sin(k*x) * np.cos(k*y) * np.cos(k*z)
-            v = -tu * np.cos(k*x) * np.sin(k*y) * np.cos(k*z)
-            w = 0.0
-
-            vel = np.array([u, w, v], dtype=np.float32)
-            fluid.setVelocity0(i, vel)
-            fluid.setVelocity(i, vel)
+            y = pos[2]
+            
+            fluid.setVelocity(i, [y*a, 0, 0])
 
 def main():
     # Set up the simulator
@@ -48,38 +36,27 @@ def main():
     base.setGui(gui)
     base.setTimeStepCB(time_step_callback)
 
+    # Get the scene and add objects
+    scene = sph.Exec.SceneConfiguration.getCurrent().getScene()
+    
+    scene.boundaryModels.append(Scenes.BoundaryData(meshFile="../models/UnitBox.obj", translation=[0., 0.0, 0.], scale=[8., 6., 4.0], color=[0.1, 0.4, 0.5, 1.0], isWall=True, mapInvert=True, mapResolution=[25, 25, 25]))   
+    scene.fluidBlocks.append(Scenes.FluidBlock(id='Fluid', boxMin=[-2.0, 0.0, -0.7], boxMax = [2.0, 0.7, 0.7], mode=0, initialVelocity=[0.0, 0.0, 0.0]))
+
     base.setValueFloat(base.DATA_EXPORT_FPS, 25.0)
     base.setValueString(base.PARTICLE_EXPORT_ATTRIBUTES,"m_is_vortex;m_lambdatwo;angular velocity;m_vorticity_init;m_angularAcceleration;density;m_direction_vort_dev;m_direction_velocity;velocity;m_masses;mass;vorticity_advected;vorticity_corrected_end;stream;vorticity_linear_field;vorticity_derivative;vorticity_dissipation;delta_velocity;m_vorticity_equation;m_a_adv;m_velocity_from_dfsph;m_velocity_corrected_end;m_position_from_dfsph;m_vorticity_rate_laplacian;m_vorticity_rate_gradient;m_gradV_x;m_gradV_y;m_gradV_z")
     base.activateExporter("VTK Exporter", True)
-
-    # Get the scene and add objects
-    scene = sph.Exec.SceneConfiguration.getCurrent().getScene()
-    scene.particleRadius = 0.025
-    scene.sim2D = False
-
-    # change camera position
-    # base.setValueFloat(base.PAUSE_AT, 30.0)
-    base.setVec3ValueReal(base.CAMERA_POSITION, [0,0,8])
-    base.setVec3ValueReal(base.CAMERA_LOOKAT, [0,0,0])
-    base.setValueInt(base.RENDER_WALLS, 0)
-    base.setValueFloat(base.PAUSE_AT, 10.0) 
-
-    # scene.materials.append(Scenes.MaterialData(id='Ghost'))
-    scene.boundaryModels.append(Scenes.BoundaryData(meshFile="../models/UnitBox.obj", translation=[0., 0., 0], scale=[2., 2., 2.], color=[0.1, 0.4, 0.5, 1.0], isWall=True, mapInvert=False, mapResolution=[25, 25, 25], isDynamic=False))
-
-    # scene.fluidBlocks.append(Scenes.FluidBlock(id='Fluid', boxMin = [0, 0, -0.32], boxMax = [6.527 , 6.527, 0.32], mode=0, initialVelocity=[0.0, 0.0, 0.0]))
-    scene.fluidBlocks.append(Scenes.FluidBlock(id='Fluid', boxMin = [-0.95, -0.95, -0.95], boxMax = [0.95 , 0.95, 0.95], mode=0, initialVelocity=[0.0, 0.0, 0.0]))
-    # scene.fluidBlocks.append(Scenes.FluidBlock(id='Ghost', boxMin = [-7, -7, -0.32], boxMax = [-4 , -4, 0.32], mode=0, initialVelocity=[0.0, 0.0, 0.0]))
+    base.setValueFloat(base.PAUSE_AT, 1.6) 
 
     # init the simulation
     base.initSimulation()
 
     sim = sph.Simulation.getCurrent()
-    sim.setValueInt(sim.BOUNDARY_HANDLING_METHOD, 0)
+    sim.setValueInt(sim.BOUNDARY_HANDLING_METHOD, 2)
     sim.setVec3ValueReal(sim.GRAVITATION, [0,0,0])
-
+    
     base.runSimulation()
     base.cleanup()
 
 if __name__ == "__main__":
     main()
+

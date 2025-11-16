@@ -111,6 +111,7 @@ set(VORTICITY_HEADER_FILES
 	Vorticity/MicropolarModel_Bender2017.h
 	Vorticity/VorticityConfinement.h
 	Vorticity/VorticityRefinement.h
+	Vorticity/VorticityRefinement_Liu2021.h
 	)
 	
 set(VORTICITY_SOURCE_FILES
@@ -118,6 +119,7 @@ set(VORTICITY_SOURCE_FILES
 	Vorticity/MicropolarModel_Bender2017.cpp
 	Vorticity/VorticityConfinement.cpp
 	Vorticity/VorticityRefinement.cpp
+	Vorticity/VorticityRefinement_Liu2021.cpp
 	)	
 
 set(DRAG_HEADER_FILES

@@ -1,3 +1,8 @@
+import sys
+import os
+os.chdir(r"C:\Users\gabri\Documents\thesis\SPlisHSPlasH")
+sys.path.append(r"C:\Users\gabri\Documents\thesis\SPlisHSPlasH\build\lib\Release")  # where pysplishsplash.pyd lives
+
 import pysplishsplash as sph
 import pysplishsplash.Utilities.SceneLoaderStructs as Scenes
 import numpy as np

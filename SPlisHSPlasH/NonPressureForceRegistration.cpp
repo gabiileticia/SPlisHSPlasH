@@ -13,6 +13,7 @@
 #include "SPlisHSPlasH/Vorticity/VorticityConfinement.h"
 #include "SPlisHSPlasH/Vorticity/MicropolarModel_Bender2017.h"
 #include "SPlisHSPlasH/Vorticity/VorticityRefinement.h"
+#include "SPlisHSPlasH/Vorticity/VorticityRefinement_Liu2021.h"
 
 #include "Elasticity/Elasticity_Becker2009.h"
 #include "Elasticity/Elasticity_Peer2018.h"
@@ -61,4 +62,6 @@ void Simulation::registerNonpressureForces()
 	addVorticityMethod("Micropolar model", MicropolarModel_Bender2017::creator);
 	addVorticityMethod("Vorticity confinement", VorticityConfinement::creator);
 	addVorticityMethod("Vorticity refinement", VorticityRefinement::creator);
+	addVorticityMethod("Vorticity refinement Liu", VorticityRefinement_Liu2021::creator);
+	
 }
