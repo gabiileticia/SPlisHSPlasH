@@ -22,3 +22,5 @@ pySPlisHSPlasH/CMakeFiles/
 Utilities/CMakeFiles/
 *.cmake
 lib/
+Makefile
+*/Makefile
