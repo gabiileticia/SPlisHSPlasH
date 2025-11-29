@@ -49,13 +49,13 @@ void VorticityConfinement::step()
 			//////////////////////////////////////////////////////////////////////////
 			// Fluid
 			//////////////////////////////////////////////////////////////////////////
-			forall_fluid_neighbors_in_same_phase(
-				const Vector3r &vj = m_model->getVelocity(neighborIndex);
-				const Real density_j = m_model->getDensity(neighborIndex);
+			forall_fluid_neighbors(
+				const Vector3r &vj = fm_neighbor->getVelocity(neighborIndex);
+				const Real density_j = fm_neighbor->getDensity(neighborIndex);
 				const Real density_j2 = density_j *density_j;
 				const Vector3r gradW = sim->gradW(xi - xj);
 
-				omegai -= m_model->getMass(neighborIndex) / density_i * (vi - vj).cross(gradW);
+				omegai -= fm_neighbor->getMass(neighborIndex) / density_i * (vi - vj).cross(gradW);
 			)
 			Real &normOmegai = m_normOmega[i];
 			normOmegai = omegai.norm();
@@ -78,11 +78,11 @@ void VorticityConfinement::step()
 			//////////////////////////////////////////////////////////////////////////
 			// Fluid
 			//////////////////////////////////////////////////////////////////////////
-			forall_fluid_neighbors_in_same_phase(
-				const Real density_j = m_model->getDensity(neighborIndex);
+			forall_fluid_neighbors(
+				const Real density_j = fm_neighbor->getDensity(neighborIndex);
 				const Vector3r gradW = sim->gradW(xi - xj);
 				Real &normOmegaj = m_normOmega[neighborIndex];
-				etai += m_model->getMass(neighborIndex) / density_i * normOmegaj * gradW;
+				etai += fm_neighbor->getMass(neighborIndex) / density_i * normOmegaj * gradW;
 			)
 
 			etai.normalize();
