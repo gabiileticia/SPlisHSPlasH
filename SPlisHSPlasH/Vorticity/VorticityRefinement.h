@@ -36,6 +36,7 @@ namespace SPH
 		std::vector<Vector3r> m_velocity_corrected_end;
 		std::vector<Vector3r> m_position_from_dfsph;
 		std::vector<Vector3r> m_vorticity_rate_laplacian;
+		std::vector<Vector3r> m_vorticity_rate_laplacian_new;
 		std::vector<Vector3r> m_vorticity_rate_gradient;
 		std::vector<Vector3r> m_gradV_x;
 		std::vector<Vector3r> m_gradV_y;
