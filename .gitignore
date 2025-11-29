@@ -9,3 +9,4 @@ output/
 *.md5
 *.cdm
 *.bin
+.github/
