@@ -10,3 +10,4 @@ output/
 *.cdm
 *.bin
 .github/
+Tests/
