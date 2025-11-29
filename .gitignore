@@ -20,3 +20,5 @@ SPlisHSPlasH/CMakeFiles/
 CMakeFiles/
 pySPlisHSPlasH/CMakeFiles/
 Utilities/CMakeFiles/
+*.cmake
+lib/
