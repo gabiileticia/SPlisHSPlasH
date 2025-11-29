@@ -24,3 +24,5 @@ Utilities/CMakeFiles/
 lib/
 Makefile
 */Makefile
+*/.ipynb_checkpoints/
+core.login*
