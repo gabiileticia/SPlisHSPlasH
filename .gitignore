@@ -17,3 +17,6 @@ Tools/
 SPlisHSPlasH/CMakeFiles/
 *.sh
 *.txt
+CMakeFiles/
+pySPlisHSPlasH/CMakeFiles/
+Utilities/CMakeFiles/
