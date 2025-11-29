@@ -11,3 +11,5 @@ output/
 *.bin
 .github/
 Tests/
+extern/
+data/
