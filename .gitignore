@@ -12,7 +12,6 @@ output/
 .github/
 Tests/
 extern/
-data/
 Tools/
 SPlisHSPlasH/CMakeFiles/
 *.sh
@@ -26,3 +25,5 @@ Makefile
 */Makefile
 SPlisHSPlasH/Vorticity/.ipynb_checkpoints/
 core.login*
+*.exe
+*.glsl
