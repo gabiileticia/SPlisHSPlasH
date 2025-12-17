@@ -47,9 +47,13 @@ namespace SPH
 		std::vector<Vector3r> m_velocity_advected;
 		std::vector<Vector3r> m_acceleration_vr;
 		std::vector<Vector3r> m_position_advected;
+		std::vector<Real> rey;
 		Real m_vorticity_refinement_alpha;
 		Real m_v_v;
 		Real m_flag;
+		Real flag_mod;
+		Real krey;
+		Real reybase;
 
 		virtual void initParameters();
 
@@ -57,6 +61,9 @@ namespace SPH
 		static int IDEAL_VORTICITY_REFINEMENT_ALPHA;
 		static int VISCOSITY_VORT_REF;
 		static int VORTICITY_FLAG;
+		static int KREY;
+		static int BASEREY;
+		static int MOD_FLAG;
 
 		VorticityRefinement(FluidModel *model);
 		virtual ~VorticityRefinement(void);

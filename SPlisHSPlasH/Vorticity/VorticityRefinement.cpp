@@ -10,6 +10,9 @@ using namespace GenParam;
 int VorticityRefinement::IDEAL_VORTICITY_REFINEMENT_ALPHA = -1;
 int VorticityRefinement::VORTICITY_FLAG = -1;
 int VorticityRefinement::VISCOSITY_VORT_REF = -1;
+int VorticityRefinement::KREY = -1;
+int VorticityRefinement::BASEREY = -1;
+int VorticityRefinement::MOD_FLAG = -1;
 
 VorticityRefinement::VorticityRefinement(FluidModel *model):
 	VorticityBase(model)
@@ -42,10 +45,14 @@ VorticityRefinement::VorticityRefinement(FluidModel *model):
     m_gradV_z.resize(model->numParticles(), Vector3r::Zero());
     m_vorticity_rate_laplacian_new.resize(model->numParticles(), Vector3r::Zero());
     m_direction_velocity.resize(model->numParticles(), 0.0);
+    rey.resize(model->numParticles(), 0.0);
 
     m_flag = static_cast<Real>(1.0);
+    flag_mod = static_cast<Real>(1.0);
     m_vorticity_refinement_alpha = static_cast<Real>(1.0);
     m_v_v = static_cast<Real>(0.05);
+    krey = static_cast<Real>(3.0);
+    reybase = static_cast<Real>(0.2);
     
     model->addField({ "m_vorticity_init", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_init[i][0]; }, true });
     model->addField({ "vorticity_corrected_end", FieldType::Vector3, [&](const unsigned int i) -> Real* { return &m_vorticity_corrected_end[i][0]; }, true });
@@ -71,6 +78,7 @@ VorticityRefinement::VorticityRefinement(FluidModel *model):
     model->addField({ "m_lambdatwo", FieldType::Scalar, [&](const unsigned int i) -> Real* { return &m_lambdatwo[i]; }, true });
     model->addField({ "m_is_vortex", FieldType::Scalar, [&](const unsigned int i) -> Real* { return &m_is_vortex[i]; }, true });
 	model->addField({ "m_direction_velocity", FieldType::Scalar, [&](const unsigned int i) -> Real* { return &m_direction_velocity[i]; }, true });
+    model->addField({ "rey", FieldType::Scalar, [&](const unsigned int i) -> Real* { return &rey[i]; }, true });
 
 }
 
@@ -97,6 +105,7 @@ VorticityRefinement::~VorticityRefinement(void)
     m_model->removeFieldByName("m_lambdatwo");
     m_model->removeFieldByName("m_is_vortex");
     m_model->removeFieldByName("m_direction_velocity");
+    m_model->removeFieldByName("rey");
 
 
     m_vorticity_linear_field.clear();
@@ -120,6 +129,7 @@ VorticityRefinement::~VorticityRefinement(void)
     m_lambdatwo.clear();
     m_is_vortex.clear();
     m_direction_velocity.clear();
+    rey.clear();
 }
 
 void VorticityRefinement::initParameters()
@@ -138,6 +148,18 @@ void VorticityRefinement::initParameters()
     VORTICITY_FLAG = createNumericParameter("accelXvelocity", "Acceleration or Velocity", &m_flag);
     setGroup(VORTICITY_FLAG, "Fluid Model|Vorticity");
     rparam = static_cast<RealParameter*>(getParameter(VORTICITY_FLAG));
+
+    MOD_FLAG = createNumericParameter("Mod visc", "Mod visc", &flag_mod);
+    setGroup(MOD_FLAG, "Fluid Model|Vorticity");
+    rparam = static_cast<RealParameter*>(getParameter(MOD_FLAG));
+
+    KREY = createNumericParameter("k rey", "k rey", &krey);
+    setGroup(KREY, "Fluid Model|Vorticity");
+    rparam = static_cast<RealParameter*>(getParameter(KREY));
+
+    BASEREY = createNumericParameter("rey base", "rey base", &reybase);
+    setGroup(BASEREY, "Fluid Model|Vorticity");
+    rparam = static_cast<RealParameter*>(getParameter(BASEREY));
 
 }
 /*
@@ -461,9 +483,46 @@ void VorticityRefinement::step()
             m_acceleration_vr[i] = m_model->getAcceleration(i);
             /////////////////////////////////////////////
 
-            const Vector3r& vort_i = m_vorticity_corrected_end[i];
             Vector3r& vorticity_linear_field = m_vorticity_linear_field[i];
             vorticity_linear_field.setZero();
+
+            const Real density_i = m_model->getDensity(i);
+
+            forall_fluid_neighbors(
+                const Vector3r & vj = fm_neighbor->getVelocity(neighborIndex);
+                const Real density_j = fm_neighbor->getDensity(neighborIndex);
+
+                const Real mass_j = fm_neighbor->getMass(neighborIndex);
+
+                const Vector3r xij = xi - xj;
+                const Vector3r gradW = sim->gradW(xij);
+
+                vorticity_linear_field += (mass_j / density_i) * (vi - vj).cross(gradW);
+            );
+
+            if (sim->is2DSimulation()) {
+                vorticity_linear_field.x() = 0.0;
+                vorticity_linear_field.y() = 0.0;
+            }
+
+            if (t < 0.002) {
+                m_vorticity_init[i] = vorticity_linear_field;
+                m_vorticity_corrected_end[i] = vorticity_linear_field;
+            }
+
+        }
+
+    }
+
+    #pragma omp parallel default(shared)
+    {
+    #pragma omp for schedule(static)  
+        for (int i = 0; i < (int)numParticles; i++)
+        {
+            const Vector3r& xi = m_model->getPosition(i);
+            const Vector3r& vi = m_model->getVelocity(i);
+
+            const Vector3r& vort_i = m_vorticity_corrected_end[i];
 
             Vector3r& gradV_x = m_gradV_x[i];
             gradV_x.setZero();
@@ -495,14 +554,11 @@ void VorticityRefinement::step()
                 gradV_y += (mass_j / density_j) * (vj.y() - vi.y()) * (gradW);
                 gradV_z += (mass_j / density_j) * (vj.z() - vi.z()) * (gradW);
 
-                vorticity_linear_field += (mass_j / density_i) * (vi - vj).cross(gradW);
-                //vorticity_linear_field -= density_i * mass_j * (vi / (density_i * density_i) + vj / (density_j * density_j)).cross(gradW);
-
                 if (sim->is2DSimulation()) {
-                    vorticity_rate_laplacian.z() += 2 * (d + 2) * m_v_v * (mass_j / density_j) * vort_ij.z() * xij.dot(gradW) / (xij.dot(xij) + 0.01 * h2);
+                    vorticity_rate_laplacian.z() += 2 * (d + 2) * (mass_j / density_j) * vort_ij.z() * xij.dot(gradW) / (xij.dot(xij) + 0.01 * h2);
                 }
                 else {
-                    vorticity_rate_laplacian += 2 * (d + 2) * m_v_v * (mass_j / density_j) * ((vort_ij.dot(xij)) / (xij.dot(xij) + 0.01 * h2)) * gradW;
+                    vorticity_rate_laplacian += 2 * (d + 2) * (mass_j / density_j) * ((vort_ij.dot(xij)) / (xij.dot(xij) + 0.01 * h2)) * gradW;
                 }
             );
 
@@ -510,24 +566,10 @@ void VorticityRefinement::step()
             vorticity_rate_gradient.y() = vort_i.dot(gradV_y);
             vorticity_rate_gradient.z() = vort_i.dot(gradV_z);
 
-            if (sim->is2DSimulation()) {
-                vorticity_linear_field.x() = 0.0;
-                vorticity_linear_field.y() = 0.0;
-            }
-
-        }
-
-
-        #pragma omp for schedule(static) reduction(+:sum_diff)
-        for (int i = 0; i < (int)numParticles; i++)
-        {
-            sum_diff += 0.5 * m_vorticity_corrected_end[i].norm();
         }
 
     }
 
-    sum_diff = sum_diff / numParticles;
-    //std::cout << sum_diff << "\n";
 
     #pragma omp parallel default(shared)
     {
@@ -535,11 +577,18 @@ void VorticityRefinement::step()
         for (int i = 0; i < (int)numParticles; i++)
         {
 
-            //vorticity_rate_laplacian.normalize();
-    /*        if (sum_diff > 1e-6) {
-                m_vorticity_rate_laplacian_new[i] = (std::exp(-m_vorticity_corrected_end[i].norm() / sum_diff)) * m_vorticity_rate_laplacian[i];
-            }*/
-            m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_vorticity_rate_laplacian[i];
+            if (flag_mod == 1.0) {
+
+                rey[i] = (m_v_v * m_vorticity_rate_laplacian[i].norm()) / (m_vorticity_linear_field[i].norm()  + 1e-6);
+            }
+            else {
+                rey[i] = (m_v_v * m_vorticity_rate_laplacian[i].norm()) / (m_vorticity_rate_gradient[i].norm() + 1e-6);
+            }
+            
+            Real m_v_new = m_v_v * 1/(1 + std::pow(rey[i] / reybase, krey));
+
+            m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_v_new * m_vorticity_rate_laplacian[i];
+            //m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_v_v * m_vorticity_rate_laplacian[i];
             m_vorticity_equation[i] = m_vorticity_corrected_end[i] + dt * m_vorticity_derivative[i];
             m_vorticity_dissipation[i] = m_vorticity_equation[i] - m_vorticity_linear_field[i];
 
