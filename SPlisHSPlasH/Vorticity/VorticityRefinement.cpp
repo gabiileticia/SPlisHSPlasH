@@ -588,7 +588,7 @@ void VorticityRefinement::step()
                 m_v_new = m_v_v * 1 / (1 + std::pow(rey[i] / reybase, krey));
             }
             else {
-                rey[i] = (m_vorticity_linear_field[i].norm() * m_model->getVelocity(i)) / (m_v_v * m_vorticity_rate_laplacian[i].norm() + 1e-6);
+                rey[i] = (m_vorticity_linear_field[i].norm() * (m_model->getVelocity(i)).norm()) / (m_v_v * m_vorticity_rate_laplacian[i].norm() + 1e-6);
                 m_v_new = m_v_v * 1 / (1 + std::exp(-krey * (rey[i]- reybase)));
             }
             
