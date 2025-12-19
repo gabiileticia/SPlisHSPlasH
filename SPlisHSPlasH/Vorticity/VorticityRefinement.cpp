@@ -576,16 +576,23 @@ void VorticityRefinement::step()
         #pragma omp for schedule(static)  
         for (int i = 0; i < (int)numParticles; i++)
         {
+            Real m_v_new = m_v_v;
 
             if (flag_mod == 1.0) {
 
                 rey[i] = (m_v_v * m_vorticity_rate_laplacian[i].norm()) / (m_vorticity_linear_field[i].norm()  + 1e-6);
+                m_v_new = m_v_v * 1 / (1 + std::pow(rey[i] / reybase, krey));
+            }
+            else if(flag_mod = 2.0) {
+                rey[i] = (m_v_v * m_vorticity_rate_laplacian[i].norm()) / (m_vorticity_rate_gradient[i].norm() + 1e-6);
+                m_v_new = m_v_v * 1 / (1 + std::pow(rey[i] / reybase, krey));
             }
             else {
-                rey[i] = (m_v_v * m_vorticity_rate_laplacian[i].norm()) / (m_vorticity_rate_gradient[i].norm() + 1e-6);
+                rey[i] = (m_vorticity_linear_field[i].norm() * m_model->getVelocity(i)) / (m_v_v * m_vorticity_rate_laplacian[i].norm() + 1e-6);
+                m_v_new = m_v_v * 1 / (1 + std::exp(-krey * (rey[i]- reybase)));
             }
             
-            Real m_v_new = m_v_v * 1/(1 + std::pow(rey[i] / reybase, krey));
+            m_v_new = m_v_v * 1/(1 + std::pow(rey[i] / reybase, krey));
 
             m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_v_new * m_vorticity_rate_laplacian[i];
             //m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_v_v * m_vorticity_rate_laplacian[i];
