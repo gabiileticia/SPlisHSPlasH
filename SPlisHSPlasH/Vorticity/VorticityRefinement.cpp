@@ -594,8 +594,8 @@ void VorticityRefinement::step()
             
             m_v_new = m_v_v * 1/(1 + std::pow(rey[i] / reybase, krey));
 
-            m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_v_new * m_vorticity_rate_laplacian[i];
-            //m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_v_v * m_vorticity_rate_laplacian[i];
+            //m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_v_new * m_vorticity_rate_laplacian[i];
+            m_vorticity_derivative[i] = m_vorticity_rate_gradient[i] + m_v_v * m_vorticity_rate_laplacian[i];
             m_vorticity_equation[i] = m_vorticity_corrected_end[i] + dt * m_vorticity_derivative[i];
             m_vorticity_dissipation[i] = m_vorticity_equation[i] - m_vorticity_linear_field[i];
 
@@ -663,20 +663,30 @@ void VorticityRefinement::step()
                 delta_velocity.z() = 0.0;
             }
 
-
-            if (m_flag == 1.0)
-            {
-                vi += vorticity_refinement_alpha * delta_velocity;
-            }
-            else {
-                if (m_model->getParticleState(i) == ParticleState::Active)
+            if (delta_velocity.norm() > 1e-5) {
+                if (m_flag == 1.0)
                 {
-                    ai += (vorticity_refinement_alpha * delta_velocity) / dt;
+                    vi += vorticity_refinement_alpha * delta_velocity;
+
+                    // saving final velocity
+                    m_velocity_corrected_end[i] = vi;
+                }
+                else {
+                    if (m_model->getParticleState(i) == ParticleState::Active)
+                    {
+                        ai += (vorticity_refinement_alpha * delta_velocity) / dt;
+                    }
+
+                    // saving final velocity
+                    m_velocity_corrected_end[i] = vi + vorticity_refinement_alpha * delta_velocity;
                 }
             }
+            else {
+                // saving final velocity
+                m_velocity_corrected_end[i] = vi;
+            }
 
-            // saving final velocity
-            m_velocity_corrected_end[i] = vi;
+            
         }
 
         # pragma omp for schedule(static)  
